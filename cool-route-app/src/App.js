@@ -1,15 +1,9 @@
-// Filename - App.js
-
-// Importing modules
-import React, { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polygon, Tooltip } from "react-leaflet";
+import React, { useState } from "react";
+import { MapContainer, TileLayer, Marker, Tooltip, useMapEvents } from "react-leaflet";
 import axios from "axios";
 import "leaflet/dist/leaflet.css";
 import "./App.css";
-import L from 'leaflet';
-import { useMapEvents } from "react-leaflet";
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import L from "leaflet";
 
 const DefaultIcon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
@@ -19,41 +13,75 @@ const DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-function App() {
-  const [markers, setMarkers] = useState([]);
-  const [currentMarker, setCurrentMarker] = useState(0);
+const MARKER_START = 0;
+const MARKER_END = 1;
 
-  // Function to handle click events on the map
+function App() {
+  const [startMarker, setStartMarker] = useState(null);
+  const [endMarker, setEndMarker] = useState(null);
+  const [currentMarker, setCurrentMarker] = useState(MARKER_START);
+  const [startCoordinateText, setStartCoordinateText] = useState("Start: Place Marker");
+  const [endCoordinateText, setEndCoordinateText] = useState("End: Place Marker");
+
+  const polygon = L.polygon([
+    [42.20, -71.90],  // Southwest corner, just outside Worcester to the west
+    [42.20, -71.70],  // Southeast corner, just outside Worcester to the east
+    [42.34, -71.70],  // Northeast corner, just outside Worcester to the north
+    [42.34, -71.90],  // Northwest corner, just outside Worcester to the north-west
+    [42.20, -71.90]   // Closing the polygon
+  ]);  
+
+  // ClickHandler component to handle marker placement
   const ClickHandler = () => {
     useMapEvents({
       click: (e) => {
         const { lat, lng } = e.latlng;
-        const newMarkers = [...markers];
-        newMarkers[currentMarker] = { lat, lng };
-        setMarkers(newMarkers);
-        setCurrentMarker(currentMarker === 0 ? 1 : 0);
+        const point = L.latLng(lat, lng);
+
+        if (polygon.getBounds().contains(point)) {
+
+          if (currentMarker === MARKER_START) {
+            setStartMarker({ lat, lng });
+            setStartCoordinateText(`Start: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+          } else {
+            setEndMarker({ lat, lng });
+            setEndCoordinateText(`End: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+          }
+        }else{
+          console.log("clicked too far away")
+        }
       },
     });
     return null;
   };
 
-  // Function to send both coordinates to an API using axios
+  // Toggle marker between start and end
+  const toggleMarker = (which) => {
+    if (which === "start") {
+      setCurrentMarker(MARKER_START);
+    } else {
+      setCurrentMarker(MARKER_END);
+    }
+  };
+
+  // Helper functions to apply dynamic classes based on current marker
+  const toggleMarkerStart = () => (currentMarker === MARKER_START ? "selected" : "regular");
+  const toggleMarkerEnd = () => (currentMarker === MARKER_END ? "selected" : "regular");
+
+  // Send coordinates to API
   const sendCoordinatesToAPI = () => {
-    if (markers.length < 2 || !markers[0] || !markers[1]) {
+    if (!startMarker || !endMarker) {
       console.log("Both markers need to be placed on the map before sending.");
       return;
     }
 
-    const coordinates = {
-      start: markers[0], // First marker (start)
-      end: markers[1], // Second marker (end)
-    };
+    const coordinates = { start: startMarker, end: endMarker };
+    console.log(coordinates);
 
-    // Replace 'YOUR_API_URL' with the actual API endpoint
     axios
-      .post("http://127.0.0.1:5000/solve-route", coordinates)
+      .post("http://127.0.0.1:5000/temp", coordinates)
       .then((response) => {
-        console.log("Data sent successfully:", response.data);
+        console.log("Data received successfully:", response.data);
       })
       .catch((error) => {
         console.error("Error sending data:", error);
@@ -67,68 +95,39 @@ function App() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="&copy; OpenStreetMap contributors"
         />
-        <ClickHandler /> {/* Handle clicks on the map */}
-
-        {/* Render markers */}
-        {markers.map(
-          (position, index) =>
-            position.lat && position.lng && (
-              <Marker key={index} position={[position.lat, position.lng]}>
-                <Tooltip direction="top" offset={[0, -15]} opacity={1}>
-                  {index === 0 ? "Start" : "End"}
-                </Tooltip>
-              </Marker>
-            )
+        <ClickHandler />
+        {startMarker && (
+          <Marker position={[startMarker.lat, startMarker.lng]}>
+            <Tooltip direction="top" offset={[0, -15]} opacity={1}>
+              Start
+            </Tooltip>
+          </Marker>
+        )}
+        {endMarker && (
+          <Marker position={[endMarker.lat, endMarker.lng]}>
+            <Tooltip direction="top" offset={[0, -15]} opacity={1}>
+              End
+            </Tooltip>
+          </Marker>
         )}
       </MapContainer>
-
-      <div className = "button-container">
+      <div className="button-container">
+        <button className={toggleMarkerStart()} onClick={() => toggleMarker("start")}>
+          Set Start
+        </button>
+        <button className={toggleMarkerEnd()} onClick={() => toggleMarker("end")}>
+          Set End
+        </button>
+        <div>
+          <label>{startCoordinateText}</label>
+        </div>
+        <div>
+          <label>{endCoordinateText}</label>
+        </div>
         <button onClick={sendCoordinatesToAPI}>Send Coordinates</button>
       </div>
     </div>
   );
-
-  /*
-  // usestate for setting a javascript
-  // object for storing and using data
-  const [data, setdata] = useState({
-    name: "",
-    age: 0,
-    date: "",
-    programming: "",
-  });
-
-  // Using useEffect for single rendering
-  useEffect(() => {
-    // Using fetch to fetch the api from 
-    // flask server it will be redirected to proxy
-    fetch("/data").then((res) =>
-      res.json().then((data) => {
-        // Setting a data from api
-        setdata({
-          name: data.Name,
-          age: data.Age,
-          date: data.Date,
-          programming: data.programming,
-        });
-      })
-    );
-  }, []);
-
-  return (
-    <div className="App">
-      <header className="App-header">
-        <h1>React and flask</h1>
-          { //Calling a data from setdata for showing}
-          <p>{data.name}</p>
-          <p>{data.age}</p>
-          <p>{data.date}</p>
-          <p>{data.programming}</p>
-
-      </header>
-    </div>
-  );
-  */
-};
+}
 
 export default App;
