@@ -30,10 +30,10 @@ function App() {
 
   // Add color function to determine color of route: direct vs cool
   // const color = feature.properties.direct ? "blue" : "green"
-  const color = "green"
+  const color = "blue"
   const geoJsonStyle = {
     color: color,
-    weight: 2,
+    weight: 5,
     opacity: 1,
     fillOpacity: 0.5
   };
