@@ -24,6 +24,7 @@ function App() {
   const [endCoordinateText, setEndCoordinateText] = useState("End: Place Marker");
   const [geoJsonData, setGeoJsonData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [time, setTime] = useState("");
 
   const geoJsonLayerRef = useRef();
 
@@ -80,14 +81,14 @@ function App() {
   const toggleMarkerEnd = () => (currentMarker === MARKER_END ? "selected" : "regular");
 
   const sendCoordinatesToAPI = () => {
-    if (!startMarker || !endMarker) {
-      console.log("Both markers need to be placed on the map before sending.");
+    if (!startMarker || !endMarker || time === "") {
+      console.log("Both markers need to be placed on the map and a time must be entered before sending.");
       return;
     }
 
     setLoading(true);
 
-    const coordinates = { start: startMarker, end: endMarker };
+    const coordinates = { start: startMarker, end: endMarker, time: time };
     console.log(coordinates);
 
     axios
@@ -121,6 +122,8 @@ function App() {
         console.error("Error loading GeoJSON file:", error);
       });
   }, []);
+
+
   
 
   return (
@@ -149,12 +152,24 @@ function App() {
       </MapContainer>
       <div className='panel'>
         <div className='left-button-container'>
-          <button className={toggleMarkerStart()} onClick={() => toggleMarker("start")}>
-            Set Start
-          </button>
-          <button className={toggleMarkerEnd()} onClick={() => toggleMarker("end")}>
-            Set End
-          </button>
+          <button className={toggleMarkerStart()} onClick={() => toggleMarker("start")}>Set Start</button>
+          <button className={toggleMarkerEnd()} onClick={() => toggleMarker("end")}>Set End</button>
+          <select className='dropdown' value={time} onChange={(e) => setTime(e.target.value)}>
+            <option value="" disabled>Select a time</option>
+            <option value="6">6 or earlier</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+            <option value="13">13</option>
+            <option value="14">14</option>
+            <option value="15">15</option> 
+            <option value="16">16</option>
+            <option value="17">17</option>
+            <option value="18">18 or later</option>
+          </select>
           <button onClick={sendCoordinatesToAPI}>Send Coordinates</button>
           {loading &&
             <div className='loader'></div>
