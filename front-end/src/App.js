@@ -163,26 +163,26 @@ function App() {
       <div className='panel'>
         
         <div className='left-button-container'>
-          <label>Cool Routes Worceter</label>
+          <label>Cool Routes Worcester</label>
           <button className={toggleMarkerStart()} onClick={() => toggleMarker("start")}>Set Start</button>
           <button className={toggleMarkerEnd()} onClick={() => toggleMarker("end")}>Set End</button>
           <select className='dropdown' value={time} onChange={(e) => setTime(e.target.value)}>
             <option value="" disabled>Select a time</option>
-            <option value="6">6 or earlier</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-            <option value="11">11</option>
-            <option value="12">12</option>
-            <option value="13">13</option>
-            <option value="14">14</option>
-            <option value="15">15</option> 
-            <option value="16">16</option>
-            <option value="17">17</option>
-            <option value="18">18</option>
-            <option value="19">19</option>
-            <option value="20">20 or later</option>
+            <option value="6">6 am or earlier</option>
+            <option value="7">7 am </option>
+            <option value="8">8 am</option>
+            <option value="9">9 am</option>
+            <option value="10">10 am</option>
+            <option value="11">11 am</option>
+            <option value="12">12 pm</option>
+            <option value="13">1 pm</option>
+            <option value="14">2 pm</option>
+            <option value="15">3 pm</option> 
+            <option value="16">4 pm</option>
+            <option value="17">5 pm</option>
+            <option value="18">6 pm</option>
+            <option value="19">7 pm</option>
+            <option value="20">8 pm or later</option>
           </select>
           <button onClick={sendCoordinatesToAPI}>Calculate Route</button>
           {loading &&
