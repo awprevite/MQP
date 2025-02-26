@@ -11,8 +11,9 @@ NETWORK_DATASET = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1
 STOPS_FEATURE_CLASS = os.path.join(GDB_PATH, "Stops")
 ROUTE_OUTPUT = os.path.join(GDB_PATH, "RouteOutput")
 SHAPEFILE_OUTPUT = r"C:\Users\awpre\MQP_APP\outputs\RouteOutput.shp"
-GEOJSON_OUTPUT = r"C:\Users\awpre\MQP_APP\cool-route-app\public\RouteOutput.geojson"
-GEOJSON_CONVERTED = r"C:\Users\awpre\MQP_APP\cool-route-app\public\RouteOutputConverted.geojson"
+GEOJSON_OUTPUT = r"C:\Users\awpre\MQP_APP\front-end\public\RouteOutput.geojson"
+GEOJSON_CONVERTED = r"C:\Users\awpre\MQP_APP\front-end\public\RouteOutputConverted.geojson"
+# Fix these paths when running on windows laptop
 
 app = Flask(__name__)
 CORS(app)
