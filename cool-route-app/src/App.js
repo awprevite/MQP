@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { MapContainer, TileLayer, Marker, Tooltip, useMapEvents } from "react-leaflet";
+import React, { useState, useEffect, useRef } from "react";
+import { MapContainer, TileLayer, Marker, Tooltip, useMapEvents, GeoJSON } from "react-leaflet";
 import axios from "axios";
 import "leaflet/dist/leaflet.css";
 import "./App.css";
@@ -22,6 +22,18 @@ function App() {
   const [currentMarker, setCurrentMarker] = useState(MARKER_START);
   const [startCoordinateText, setStartCoordinateText] = useState("Start: Place Marker");
   const [endCoordinateText, setEndCoordinateText] = useState("End: Place Marker");
+  const [geoJsonData, setGeoJsonData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const geoJsonLayerRef = useRef();
+
+  useEffect(() => {
+    if (geoJsonData && geoJsonLayerRef.current) {
+      geoJsonLayerRef.current.clearLayers();
+      geoJsonLayerRef.current.addData(geoJsonData);
+    }
+  }, [geoJsonData]);
+
 
   const polygon = L.polygon([
     [42.20, -71.90],  // Southwest corner, just outside Worcester to the west
@@ -64,16 +76,16 @@ function App() {
     }
   };
 
-  // Helper functions to apply dynamic classes based on current marker
   const toggleMarkerStart = () => (currentMarker === MARKER_START ? "selected" : "regular");
   const toggleMarkerEnd = () => (currentMarker === MARKER_END ? "selected" : "regular");
 
-  // Send coordinates to API
   const sendCoordinatesToAPI = () => {
     if (!startMarker || !endMarker) {
       console.log("Both markers need to be placed on the map before sending.");
       return;
     }
+
+    setLoading(true);
 
     const coordinates = { start: startMarker, end: endMarker };
     console.log(coordinates);
@@ -82,11 +94,34 @@ function App() {
       .post("http://127.0.0.1:5000/temp", coordinates)
       .then((response) => {
         console.log("Data received successfully:", response.data);
+        if (response.data.type === "FeatureCollection") {
+          console.log("Correct format")
+          //setGeoJsonData(response.data);
+        } else {
+          console.error("Invalid GeoJSON format");
+        }
       })
       .catch((error) => {
         console.error("Error sending data:", error);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   };
+  
+  useEffect(() => {
+    // Fetch the GeoJSON file from the public folder
+    fetch("/RouteOutputConverted.geojson")
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        setGeoJsonData(data);
+      })
+      .catch((error) => {
+        console.error("Error loading GeoJSON file:", error);
+      });
+  }, []);
+  
 
   return (
     <div>
@@ -95,6 +130,7 @@ function App() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="&copy; OpenStreetMap contributors"
         />
+        {geoJsonData && <GeoJSON data={geoJsonData} />}
         <ClickHandler />
         {startMarker && (
           <Marker position={[startMarker.lat, startMarker.lng]}>
@@ -111,20 +147,27 @@ function App() {
           </Marker>
         )}
       </MapContainer>
+      <div className='panel'>
+        <div className='left-button-container'>
+          <button className={toggleMarkerStart()} onClick={() => toggleMarker("start")}>
+            Set Start
+          </button>
+          <button className={toggleMarkerEnd()} onClick={() => toggleMarker("end")}>
+            Set End
+          </button>
+          <button onClick={sendCoordinatesToAPI}>Send Coordinates</button>
+          {loading &&
+            <div className='loader'></div>
+          }
+        </div>
+      </div>
       <div className="button-container">
-        <button className={toggleMarkerStart()} onClick={() => toggleMarker("start")}>
-          Set Start
-        </button>
-        <button className={toggleMarkerEnd()} onClick={() => toggleMarker("end")}>
-          Set End
-        </button>
         <div>
           <label>{startCoordinateText}</label>
         </div>
         <div>
           <label>{endCoordinateText}</label>
         </div>
-        <button onClick={sendCoordinatesToAPI}>Send Coordinates</button>
       </div>
     </div>
   );
