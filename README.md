@@ -17,7 +17,7 @@ Once the user requests to calculate the route, a route from the origin to the de
 
 ### Front-end
 2. Navigate to the front-end folder  
-`cd front-end`  
+`cd MQP/front-end`  
 3. Install dependencies  
 `npm install`
 4. Run the development server  
@@ -29,3 +29,4 @@ Once the user requests to calculate the route, a route from the origin to the de
 7. Navigate to the back-end folder  
 `cd ../back-end`  
 8. Run the flask server  
+`python server.py`

@@ -11,6 +11,7 @@ body, html {
   position: absolute;
   top: 10%;
   left: 50%;
+  left: calc(50% + 100px);
   transform: translateX(-50%);
   z-index: 1000;
 }
@@ -31,15 +32,15 @@ body, html {
   position: fixed;
   top: 0;
   left: 0;
-  width: 250px;
+  width: 200px;
   height: 100vh;
   background: lightblue;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
   z-index: 999;
+  align-items: center;
 }
 
 button {
@@ -68,6 +69,15 @@ button:hover {
   cursor: pointer;
   font-family: Arial, sans-serif;
   box-sizing: border-box;
+}
+
+.dropdown:active,
+.dropdown:focus {
+  outline: none;
+}
+
+.dropdown:hover {
+  background-color: green;
 }
 
 label {

@@ -28,6 +28,16 @@ function App() {
 
   const geoJsonLayerRef = useRef();
 
+  // Add color function to determine color of route: direct vs cool
+  // const color = feature.properties.direct ? "blue" : "green"
+  const color = "green"
+  const geoJsonStyle = {
+    color: color,
+    weight: 2,
+    opacity: 1,
+    fillOpacity: 0.5
+  };
+
   useEffect(() => {
     if (geoJsonData && geoJsonLayerRef.current) {
       geoJsonLayerRef.current.clearLayers();
@@ -133,7 +143,7 @@ function App() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="&copy; OpenStreetMap contributors"
         />
-        {geoJsonData && <GeoJSON data={geoJsonData} />}
+        {geoJsonData && <GeoJSON data={geoJsonData} style={geoJsonStyle}/>}
         <ClickHandler />
         {startMarker && (
           <Marker position={[startMarker.lat, startMarker.lng]}>
@@ -151,7 +161,9 @@ function App() {
         )}
       </MapContainer>
       <div className='panel'>
+        
         <div className='left-button-container'>
+          <label>Cool Routes Worceter</label>
           <button className={toggleMarkerStart()} onClick={() => toggleMarker("start")}>Set Start</button>
           <button className={toggleMarkerEnd()} onClick={() => toggleMarker("end")}>Set End</button>
           <select className='dropdown' value={time} onChange={(e) => setTime(e.target.value)}>
@@ -168,9 +180,11 @@ function App() {
             <option value="15">15</option> 
             <option value="16">16</option>
             <option value="17">17</option>
-            <option value="18">18 or later</option>
+            <option value="18">18</option>
+            <option value="19">19</option>
+            <option value="20">20 or later</option>
           </select>
-          <button onClick={sendCoordinatesToAPI}>Send Coordinates</button>
+          <button onClick={sendCoordinatesToAPI}>Calculate Route</button>
           {loading &&
             <div className='loader'></div>
           }
