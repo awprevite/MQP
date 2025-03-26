@@ -6,6 +6,24 @@ import json
 import geopandas as gpd
 import pyproj
 
+# Set up paths on server start up
+# Optimize these, store only route layers for each hour
+ROUTE_LAYER_6AM = r"C:\Users\awpre\path\to\route\layer"
+ROUTE_LAYER_7AM = r"C:\Users\awpre\path\to\route\layer"
+ROUTE_LAYER_8AM = r"C:\Users\awpre\path\to\route\layer"
+ROUTE_LAYER_9AM = r"C:\Users\awpre\path\to\route\layer"
+ROUTE_LAYER_10AM = r"C:\Users\awpre\path\to\route\layer"
+ROUTE_LAYER_11AM = r"C:\Users\awpre\path\to\route\layer"
+ROUTE_LAYER_12AM = r"C:\Users\awpre\path\to\route\layer"
+ROUTE_LAYER_1PM = r"C:\Users\awpre\path\to\route\layer"
+ROUTE_LAYER_2PM = r"C:\Users\awpre\path\to\route\layer"
+ROUTE_LAYER_3PM = r"C:\Users\awpre\path\to\route\layer"
+ROUTE_LAYER_4PM = r"C:\Users\awpre\path\to\route\layer"
+ROUTE_LAYER_5PM = r"C:\Users\awpre\path\to\route\layer"
+ROUTE_LAYER_6PM = r"C:\Users\awpre\path\to\route\layer"
+ROUTE_LAYER_7PM = r"C:\Users\awpre\path\to\route\layer"
+ROUTE_LAYER_8PM = r"C:\Users\awpre\path\to\route\layer"
+
 GDB_PATH = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb"
 NETWORK_DATASET = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\sidewalkfeaturedataset\sidewalknetworkdataset"
 STOPS_FEATURE_CLASS = os.path.join(GDB_PATH, "Stops")
@@ -14,6 +32,10 @@ SHAPEFILE_OUTPUT = r"C:\Users\awpre\MQP_APP\outputs\RouteOutput.shp"
 GEOJSON_OUTPUT = r"C:\Users\awpre\MQP_APP\front-end\public\RouteOutput.geojson"
 GEOJSON_CONVERTED = r"C:\Users\awpre\MQP_APP\front-end\public\RouteOutputConverted.geojson"
 # Fix these paths when running on windows laptop
+
+# Network Analyst extension
+arcpy.CheckOutExtension("Network")
+print("Checked out Network Analyst extension.")
 
 app = Flask(__name__)
 CORS(app)
@@ -55,10 +77,34 @@ def solve_route():
                 cursor.insertRow([(startLng, startLat), "Start"])
                 cursor.insertRow([(endLng, endLat), "End"])
 
-            # Create route layer
+            # Create route layer - replace with assiging route layer based on time
             print("Creating route layer...")
             route_layer = arcpy.na.MakeRouteLayer(NETWORK_DATASET, "Route", "Length").getOutput(0)
             print("Route layer created.")
+
+           # Assign route layer
+            print("Assigning route layer...")
+            ROUTE_LAYERS = {
+                '6AM': ROUTE_LAYER_6AM,
+                '7AM': ROUTE_LAYER_7AM,
+                '8AM': ROUTE_LAYER_8AM,
+                '9AM': ROUTE_LAYER_9AM,
+                '10AM': ROUTE_LAYER_10AM,
+                '11AM': ROUTE_LAYER_11AM,
+                '12PM': ROUTE_LAYER_12AM,
+                '1PM': ROUTE_LAYER_1PM,
+                '2PM': ROUTE_LAYER_2PM,
+                '3PM': ROUTE_LAYER_3PM,
+                '4PM': ROUTE_LAYER_4PM,
+                '5PM': ROUTE_LAYER_5PM,
+                '6PM': ROUTE_LAYER_6PM,
+                '7PM': ROUTE_LAYER_7PM,
+                '8PM': ROUTE_LAYER_8PM,
+            }
+
+            # Get the route layer based on the time
+            route_layer = ROUTE_LAYERS.get(data['time'], ROUTE_LAYER_6AM)  # Default to ROUTE_LAYER_6AM if time is not found
+            print(f"Using route layer: {route_layer}")
 
             # Add stops to route layer
             print("Adding stops to route layer...")
