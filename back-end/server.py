@@ -8,8 +8,10 @@ import pyproj
 
 # Set up paths on server start up
 # Optimize these, store only route layers for each hour
-ROUTE_LAYER_6AM = r"C:\Users\awpre\path\to\route\layer"
-ROUTE_LAYER_7AM = r"C:\Users\awpre\path\to\route\layer"
+ROUTE_LAYER_6AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\sixAM.lyrx"
+ROUTE_FEATURE_6AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1xb3eoo\Routescg4570"
+
+ROUTE_LAYER_7AM = r"C:\Users\awpre\Downloads\sevenAM.lpkx"
 ROUTE_LAYER_8AM = r"C:\Users\awpre\path\to\route\layer"
 ROUTE_LAYER_9AM = r"C:\Users\awpre\path\to\route\layer"
 ROUTE_LAYER_10AM = r"C:\Users\awpre\path\to\route\layer"
@@ -28,14 +30,12 @@ GDB_PATH = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb
 NETWORK_DATASET = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\sidewalkfeaturedataset\sidewalknetworkdataset"
 STOPS_FEATURE_CLASS = os.path.join(GDB_PATH, "Stops")
 ROUTE_OUTPUT = os.path.join(GDB_PATH, "RouteOutput")
+STOPS_FEATURE_CLASS = os.path.join(GDB_PATH, "Stops")
+ROUTE_OUTPUT = os.path.join(GDB_PATH, "RouteOutput")
 SHAPEFILE_OUTPUT = r"C:\Users\awpre\MQP_APP\outputs\RouteOutput.shp"
 GEOJSON_OUTPUT = r"C:\Users\awpre\MQP_APP\front-end\public\RouteOutput.geojson"
 GEOJSON_CONVERTED = r"C:\Users\awpre\MQP_APP\front-end\public\RouteOutputConverted.geojson"
 # Fix these paths when running on windows laptop
-
-# Network Analyst extension
-arcpy.CheckOutExtension("Network")
-print("Checked out Network Analyst extension.")
 
 app = Flask(__name__)
 CORS(app)
@@ -68,6 +68,7 @@ def solve_route():
                 print("Deleting existing Stops feature class...")
                 arcpy.management.Delete(STOPS_FEATURE_CLASS)
             print("Creating Stops feature class...")
+            #arcpy.management.CreateFeatureclass(GDB_PATH, "Stops", "POINT", spatial_reference=arcpy.SpatialReference(4326))
             arcpy.management.CreateFeatureclass(GDB_PATH, "Stops", "POINT", spatial_reference=arcpy.SpatialReference(4326))
             arcpy.management.AddField(STOPS_FEATURE_CLASS, "Name", "TEXT")
 
@@ -78,28 +79,28 @@ def solve_route():
                 cursor.insertRow([(endLng, endLat), "End"])
 
             # Create route layer - replace with assiging route layer based on time
-            print("Creating route layer...")
-            route_layer = arcpy.na.MakeRouteLayer(NETWORK_DATASET, "Route", "Length").getOutput(0)
-            print("Route layer created.")
+            #print("Creating route layer...")
+            #route_layer = arcpy.na.MakeRouteLayer(NETWORK_DATASET, "Route", "Length").getOutput(0)
+            #print("Route layer created.")
 
-           # Assign route layer
+            # Assign route layer
             print("Assigning route layer...")
             ROUTE_LAYERS = {
-                '6AM': ROUTE_LAYER_6AM,
-                '7AM': ROUTE_LAYER_7AM,
-                '8AM': ROUTE_LAYER_8AM,
-                '9AM': ROUTE_LAYER_9AM,
-                '10AM': ROUTE_LAYER_10AM,
-                '11AM': ROUTE_LAYER_11AM,
-                '12PM': ROUTE_LAYER_12AM,
-                '1PM': ROUTE_LAYER_1PM,
-                '2PM': ROUTE_LAYER_2PM,
-                '3PM': ROUTE_LAYER_3PM,
-                '4PM': ROUTE_LAYER_4PM,
-                '5PM': ROUTE_LAYER_5PM,
-                '6PM': ROUTE_LAYER_6PM,
-                '7PM': ROUTE_LAYER_7PM,
-                '8PM': ROUTE_LAYER_8PM,
+                '6': ROUTE_LAYER_6AM,
+                '7': ROUTE_LAYER_7AM,
+                '8': ROUTE_LAYER_8AM,
+                '9': ROUTE_LAYER_9AM,
+                '10': ROUTE_LAYER_10AM,
+                '11': ROUTE_LAYER_11AM,
+                '12': ROUTE_LAYER_12AM,
+                '13': ROUTE_LAYER_1PM,
+                '14': ROUTE_LAYER_2PM,
+                '15': ROUTE_LAYER_3PM,
+                '16': ROUTE_LAYER_4PM,
+                '17': ROUTE_LAYER_5PM,
+                '18': ROUTE_LAYER_6PM,
+                '19': ROUTE_LAYER_7PM,
+                '20': ROUTE_LAYER_8PM,
             }
 
             # Get the route layer based on the time
@@ -120,16 +121,16 @@ def solve_route():
                 print("Deleting existing RouteOutput...")
                 arcpy.management.Delete(ROUTE_OUTPUT)
             print("Saving route results to geodatabase...")
-            arcpy.management.CopyFeatures(f"{route_layer}/Routes", ROUTE_OUTPUT)
+            arcpy.management.CopyFeatures(ROUTE_FEATURE_6AM, ROUTE_OUTPUT)
 
             # Save as shapefile
             if arcpy.Exists(SHAPEFILE_OUTPUT):
                 print("Deleting existing shapefile...")
                 arcpy.management.Delete(SHAPEFILE_OUTPUT)
             print("Saving route results to shapefile...")
-            arcpy.management.CopyFeatures(f"{route_layer}/Routes", SHAPEFILE_OUTPUT)
+            arcpy.management.CopyFeatures(ROUTE_FEATURE_6AM, SHAPEFILE_OUTPUT)
 
-            print(f"Route saved to: {ROUTE_OUTPUT} (Geodatabase)")
+            #print(f"Route saved to: {ROUTE_OUTPUT} (Geodatabase)")
             print(f"Route saved to: {SHAPEFILE_OUTPUT} (Shapefile)")
 
             # Save and convert to GeoJSON
@@ -141,7 +142,7 @@ def solve_route():
             gdf.to_file(GEOJSON_OUTPUT, driver='GeoJSON')
             #arcpy.FeaturesToJSON_conversion(SHAPEFILE_OUTPUT, GEOJSON_OUTPUT, "FORMATTED")
 
-            # Convert projection
+            # Convert projections
             print("Converting projection...")
             source_crs = pyproj.CRS("EPSG:2249")  # Your source CRS
             target_crs = pyproj.CRS("EPSG:4326")  # WGS84 (lat, lon)

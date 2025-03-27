@@ -107,7 +107,7 @@ function App() {
         console.log("Data received successfully:", response.data);
         if (response.data.type === "FeatureCollection") {
           console.log("Correct format")
-          //setGeoJsonData(response.data);
+          setGeoJsonData(response.data);
         } else {
           console.error("Invalid GeoJSON format");
         }
@@ -132,9 +132,8 @@ function App() {
         console.error("Error loading GeoJSON file:", error);
       });
   }, []);
-
-
   
+
 
   return (
     <div>
