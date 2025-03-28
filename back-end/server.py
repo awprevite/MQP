@@ -11,6 +11,10 @@ import pyproj
 ROUTE_LAYER_6AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\sixAM.lyrx"
 ROUTE_FEATURE_6AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1xb3eoo\Routescg4570"
 
+ROUTE_LAYER_NONE = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\onePM.lyrx"
+ROUTE_FEATURE_NONE = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolverlimj7c\Routeszb2a2o"
+
+
 ROUTE_LAYER_7AM = r"C:\Users\awpre\Downloads\sevenAM.lpkx"
 ROUTE_LAYER_8AM = r"C:\Users\awpre\path\to\route\layer"
 ROUTE_LAYER_9AM = r"C:\Users\awpre\path\to\route\layer"
@@ -85,7 +89,33 @@ def solve_route():
 
             # Assign route layer
             print("Assigning route layer...")
+            ROUTE_FEATURES = {
+                '0': ROUTE_FEATURE_NONE,
+                '6': ROUTE_FEATURE_6AM,
+                '7': ROUTE_LAYER_7AM,
+                '8': ROUTE_LAYER_8AM,
+                '9': ROUTE_LAYER_9AM,
+                '10': ROUTE_LAYER_10AM,
+                '11': ROUTE_LAYER_11AM,
+                '12': ROUTE_LAYER_12AM,
+                '13': ROUTE_LAYER_1PM,
+                '14': ROUTE_LAYER_2PM,
+                '15': ROUTE_LAYER_3PM,
+                '16': ROUTE_LAYER_4PM,
+                '17': ROUTE_LAYER_5PM,
+                '18': ROUTE_LAYER_6PM,
+                '19': ROUTE_LAYER_7PM,
+                '20': ROUTE_LAYER_8PM,
+            }
+
+            # Get the route layer based on the time
+            route_feature = ROUTE_FEATURES.get(data['time'], ROUTE_LAYER_6AM)  # Default to ROUTE_LAYER_6AM if time is not found
+            print(f"Using route feature: {route_feature}")
+
+            # Assign route feature
+            print("Assigning route feature...")
             ROUTE_LAYERS = {
+                '0': ROUTE_LAYER_NONE,
                 '6': ROUTE_LAYER_6AM,
                 '7': ROUTE_LAYER_7AM,
                 '8': ROUTE_LAYER_8AM,
@@ -121,14 +151,14 @@ def solve_route():
                 print("Deleting existing RouteOutput...")
                 arcpy.management.Delete(ROUTE_OUTPUT)
             print("Saving route results to geodatabase...")
-            arcpy.management.CopyFeatures(ROUTE_FEATURE_6AM, ROUTE_OUTPUT)
+            arcpy.management.CopyFeatures(route_feature, ROUTE_OUTPUT)
 
             # Save as shapefile
             if arcpy.Exists(SHAPEFILE_OUTPUT):
                 print("Deleting existing shapefile...")
                 arcpy.management.Delete(SHAPEFILE_OUTPUT)
             print("Saving route results to shapefile...")
-            arcpy.management.CopyFeatures(ROUTE_FEATURE_6AM, SHAPEFILE_OUTPUT)
+            arcpy.management.CopyFeatures(route_feature, SHAPEFILE_OUTPUT)
 
             #print(f"Route saved to: {ROUTE_OUTPUT} (Geodatabase)")
             print(f"Route saved to: {SHAPEFILE_OUTPUT} (Shapefile)")
@@ -155,21 +185,25 @@ def solve_route():
                 geojson_data = json.load(f)
 
             # Function to convert coordinates of each feature
-            def convert_coordinates(geojson_data):
-                for feature in geojson_data["features"]:
-                    # Check if the geometry is of type "LineString"
-                    if feature["geometry"]["type"] == "LineString":
-                        # Reproject each coordinate pair in the LineString
-                        feature["geometry"]["coordinates"] = [
-                            list(transformer.transform(x, y)) for x, y in feature["geometry"]["coordinates"]
-                        ]
+            #for feature in geojson_data["features"]:
+            #    coords = feature["geometry"]["coordinates"]
+            #    if feature["geometry"]["type"] == "LineString":
+            #        feature["geometry"]["coordinates"] = [
+             #           [list(transformer.transform(x, y)) for x, y in line] for line in coords
+              #      ]
 
-            # Convert the coordinates
-            convert_coordinates(geojson_data)
+            for feature in geojson_data["features"]:
+                #Check if the geometry is of type "LineString"
+                if feature["geometry"]["type"] == "LineString":
+                #Reproject each coordinate pair in the LineString
+                    feature["geometry"]["coordinates"] = [
+                        list(transformer.transform(x, y)) for x, y in feature["geometry"]["coordinates"]
+                    ]
+
 
             # Save the converted GeoJSON to a new file
             with open(GEOJSON_CONVERTED, "w") as f:
-                json.dump(geojson_data, f)
+                json.dump(geojson_data, f, indent=4)
 
             # Return the converted GeoJson
             with open(GEOJSON_CONVERTED, "r") as f:

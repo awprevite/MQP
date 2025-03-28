@@ -3,6 +3,8 @@ front-end/node_modules
 outputs/
 front-end/.pnp
 front-end/.pnp.js
+front-end/public/RouteOutput.geojson
+front-end/public/RouteOutputConverted.geojson
 
 # testing
 front-end/coverage

@@ -26,7 +26,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [time, setTime] = useState("");
 
-  const geoJsonLayerRef = useRef();
+  //const geoJsonLayerRef = useRef();
 
   // Add color function to determine color of route: direct vs cool
   // const color = feature.properties.direct ? "blue" : "green"
@@ -38,13 +38,14 @@ function App() {
     fillOpacity: 0.5
   };
 
+  /*
   useEffect(() => {
     if (geoJsonData && geoJsonLayerRef.current) {
       geoJsonLayerRef.current.clearLayers();
       geoJsonLayerRef.current.addData(geoJsonData);
     }
   }, [geoJsonData]);
-
+  */
 
   const polygon = L.polygon([
     [42.20, -71.90],  // Southwest corner, just outside Worcester to the west
@@ -90,7 +91,8 @@ function App() {
   const toggleMarkerStart = () => (currentMarker === MARKER_START ? "selected" : "regular");
   const toggleMarkerEnd = () => (currentMarker === MARKER_END ? "selected" : "regular");
 
-  const sendCoordinatesToAPI = () => {
+  const sendCoordinatesToAPI = (e) => {
+
     if (!startMarker || !endMarker || time === "") {
       console.log("Both markers need to be placed on the map and a time must be entered before sending.");
       return;
@@ -120,6 +122,7 @@ function App() {
       });
   };
   
+  
   useEffect(() => {
     // Fetch the GeoJSON file from the public folder
     fetch("/RouteOutputConverted.geojson")
@@ -132,8 +135,6 @@ function App() {
         console.error("Error loading GeoJSON file:", error);
       });
   }, []);
-  
-
 
   return (
     <div>
@@ -142,7 +143,7 @@ function App() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="&copy; OpenStreetMap contributors"
         />
-        {geoJsonData && <GeoJSON data={geoJsonData} style={geoJsonStyle}/>}
+        <GeoJSON data={geoJsonData} style={geoJsonStyle}/>
         <ClickHandler />
         {startMarker && (
           <Marker position={[startMarker.lat, startMarker.lng]}>
@@ -167,6 +168,7 @@ function App() {
           <button className={toggleMarkerEnd()} onClick={() => toggleMarker("end")}>Set End</button>
           <select className='dropdown' value={time} onChange={(e) => setTime(e.target.value)}>
             <option value="" disabled>Select a time</option>
+            <option value="0">None</option>
             <option value="6">6 am or earlier</option>
             <option value="7">7 am </option>
             <option value="8">8 am</option>
