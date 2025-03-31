@@ -7,28 +7,60 @@ import geopandas as gpd
 import pyproj
 
 # Set up paths on server start up
-# Optimize these, store only route layers for each hour
+
+# Stops features - RouteSolver\Stops
+STOPS_FEATURE_NONE = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver17k7mdg\Stops17acqog"
+STOPS_FEATURE_6AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1wksl6g\Stops1wamxis"
+STOPS_FEATURE_7AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1pc023s\Stops1p30evc"
+STOPS_FEATURE_8AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver17zj98w\Stops17qc79o"
+STOPS_FEATURE_9AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1bzkxqs\Stops1btwebg"
+STOPS_FEATURE_10AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1x9vihk\Stops1x0ldh4"
+STOPS_FEATURE_11AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1st1u08\Stops1sjh3ig"
+STOPS_FEATURE_12PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1vod4ng\Stops1vedsuk"
+STOPS_FEATURE_1PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver19wc7mc\Stops19mss70"
+STOPS_FEATURE_2PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1wyubzc\Stops1wp5mw8"
+STOPS_FEATURE_3PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolverx46pv8\Stopswui7vo"
+STOPS_FEATURE_4PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1a8n75g\Stops1a35emk"
+STOPS_FEATURE_5PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver118xwck\Stops10yw8fw"
+STOPS_FEATURE_6PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver8jbc24\Stops88vr2k"
+STOPS_FEATURE_7PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1371ncc\Stops12w9708"
+STOPS_FEATURE_8PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolverfi4tfk\Stopsfb6xwo"
+
+# route features - RouteSolver\Routes
+ROUTE_FEATURE_NONE = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver17k7mdg\Routes1qe65v8"
+ROUTE_FEATURE_6AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1wksl6g\Routeshwwc78"
+ROUTE_FEATURE_7AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1pc023s\Routes9r6uk8"
+ROUTE_FEATURE_8AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver17zj98w\Routes1quz26g"
+ROUTE_FEATURE_9AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1bzkxqs\Routes1scdkiw"
+ROUTE_FEATURE_10AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1x9vihk\Routeshfukqk"
+ROUTE_FEATURE_11AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1st1u08\Routesd8jmao"
+ROUTE_FEATURE_12PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1vod4ng\Routesf9k84k"
+ROUTE_FEATURE_1PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver19wc7mc\Routes1twhcv8"
+ROUTE_FEATURE_2PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1wyubzc\Routesi7f8vk"
+ROUTE_FEATURE_3PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolverx46pv8\Routes1jv18kc"
+ROUTE_FEATURE_4PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1a8n75g\Routes1oqa8wo"
+ROUTE_FEATURE_5PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver118xwck\Routes1kbhwfg"
+ROUTE_FEATURE_6PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver8jbc24\Routesud6r9g"
+ROUTE_FEATURE_7PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1371ncc\Routes1okt32k"
+ROUTE_FEATURE_8PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolverfi4tfk\Routeswep2i0"
+
+# Route layers - .lyrx route file
+ROUTE_LAYER_NONE = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\none.lyrx"
 ROUTE_LAYER_6AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\sixAM.lyrx"
-ROUTE_FEATURE_6AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolver1xb3eoo\Routescg4570"
-
-ROUTE_LAYER_NONE = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\onePM.lyrx"
-ROUTE_FEATURE_NONE = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\RouteSolverlimj7c\Routeszb2a2o"
-
-
-ROUTE_LAYER_7AM = r"C:\Users\awpre\Downloads\sevenAM.lpkx"
-ROUTE_LAYER_8AM = r"C:\Users\awpre\path\to\route\layer"
-ROUTE_LAYER_9AM = r"C:\Users\awpre\path\to\route\layer"
-ROUTE_LAYER_10AM = r"C:\Users\awpre\path\to\route\layer"
-ROUTE_LAYER_11AM = r"C:\Users\awpre\path\to\route\layer"
-ROUTE_LAYER_12AM = r"C:\Users\awpre\path\to\route\layer"
-ROUTE_LAYER_1PM = r"C:\Users\awpre\path\to\route\layer"
-ROUTE_LAYER_2PM = r"C:\Users\awpre\path\to\route\layer"
-ROUTE_LAYER_3PM = r"C:\Users\awpre\path\to\route\layer"
-ROUTE_LAYER_4PM = r"C:\Users\awpre\path\to\route\layer"
-ROUTE_LAYER_5PM = r"C:\Users\awpre\path\to\route\layer"
-ROUTE_LAYER_6PM = r"C:\Users\awpre\path\to\route\layer"
-ROUTE_LAYER_7PM = r"C:\Users\awpre\path\to\route\layer"
-ROUTE_LAYER_8PM = r"C:\Users\awpre\path\to\route\layer"
+ROUTE_LAYER_7AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\sevenAM.lyrx"
+ROUTE_LAYER_8AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\eightAM.lyrx"
+ROUTE_LAYER_9AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\nineAM.lyrx"
+ROUTE_LAYER_10AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\tenAM.lyrx"
+ROUTE_LAYER_11AM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\elevenAM.lyrx"
+ROUTE_LAYER_12PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\twelvePM.lyrx"
+ROUTE_LAYER_1PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\onePM.lyrx"
+ROUTE_LAYER_2PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\twoPM.lyrx"
+ROUTE_LAYER_3PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\threePM.lyrx"
+ROUTE_LAYER_4PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\fourPM.lyrx"
+ROUTE_LAYER_5PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\fivePM.lyrx"
+ROUTE_LAYER_6PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\sixPM.lyrx"
+ROUTE_LAYER_7PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\sevenPM.lyrx"
+ROUTE_LAYER_8PM = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\eightPM.lyrx"
 
 GDB_PATH = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb"
 NETWORK_DATASET = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1\mqpgdb\CorrectedSidewalk.gdb\sidewalkfeaturedataset\sidewalknetworkdataset"
@@ -36,9 +68,9 @@ STOPS_FEATURE_CLASS = os.path.join(GDB_PATH, "Stops")
 ROUTE_OUTPUT = os.path.join(GDB_PATH, "RouteOutput")
 STOPS_FEATURE_CLASS = os.path.join(GDB_PATH, "Stops")
 ROUTE_OUTPUT = os.path.join(GDB_PATH, "RouteOutput")
-SHAPEFILE_OUTPUT = r"C:\Users\awpre\MQP_APP\outputs\RouteOutput.shp"
-GEOJSON_OUTPUT = r"C:\Users\awpre\MQP_APP\front-end\public\RouteOutput.geojson"
-GEOJSON_CONVERTED = r"C:\Users\awpre\MQP_APP\front-end\public\RouteOutputConverted.geojson"
+SHAPEFILE_OUTPUT = r"C:\Users\awpre\MQP_APP\outputs\shapefileOutput.shp"
+GEOJSON_OUTPUT = r"C:\Users\awpre\MQP_APP\outputs\geojsonOutput.shp"
+GEOJSON_CONVERTED = r"C:\Users\awpre\MQP_APP\outputs\geojsonOutputConverted.shp"
 # Fix these paths when running on windows laptop
 
 app = Flask(__name__)
@@ -72,7 +104,6 @@ def solve_route():
                 print("Deleting existing Stops feature class...")
                 arcpy.management.Delete(STOPS_FEATURE_CLASS)
             print("Creating Stops feature class...")
-            #arcpy.management.CreateFeatureclass(GDB_PATH, "Stops", "POINT", spatial_reference=arcpy.SpatialReference(4326))
             arcpy.management.CreateFeatureclass(GDB_PATH, "Stops", "POINT", spatial_reference=arcpy.SpatialReference(4326))
             arcpy.management.AddField(STOPS_FEATURE_CLASS, "Name", "TEXT")
 
@@ -87,32 +118,61 @@ def solve_route():
             #route_layer = arcpy.na.MakeRouteLayer(NETWORK_DATASET, "Route", "Length").getOutput(0)
             #print("Route layer created.")
 
-            # Assign route layer
-            print("Assigning route layer...")
-            ROUTE_FEATURES = {
-                '0': ROUTE_FEATURE_NONE,
-                '6': ROUTE_FEATURE_6AM,
-                '7': ROUTE_LAYER_7AM,
-                '8': ROUTE_LAYER_8AM,
-                '9': ROUTE_LAYER_9AM,
-                '10': ROUTE_LAYER_10AM,
-                '11': ROUTE_LAYER_11AM,
-                '12': ROUTE_LAYER_12AM,
-                '13': ROUTE_LAYER_1PM,
-                '14': ROUTE_LAYER_2PM,
-                '15': ROUTE_LAYER_3PM,
-                '16': ROUTE_LAYER_4PM,
-                '17': ROUTE_LAYER_5PM,
-                '18': ROUTE_LAYER_6PM,
-                '19': ROUTE_LAYER_7PM,
-                '20': ROUTE_LAYER_8PM,
+            # Assign stops feature
+            print("Assigning stops feature...")
+            STOPS_FEATURES = {
+                '0': STOPS_FEATURE_NONE,
+                '6': STOPS_FEATURE_6AM,
+                '7': STOPS_FEATURE_7AM,
+                '8': STOPS_FEATURE_8AM,
+                '9': STOPS_FEATURE_9AM,
+                '10': STOPS_FEATURE_10AM,
+                '11': STOPS_FEATURE_11AM,
+                '12': STOPS_FEATURE_12PM,
+                '13': STOPS_FEATURE_1PM,
+                '14': STOPS_FEATURE_2PM,
+                '15': STOPS_FEATURE_3PM,
+                '16': STOPS_FEATURE_4PM,
+                '17': STOPS_FEATURE_5PM,
+                '18': STOPS_FEATURE_6PM,
+                '19': STOPS_FEATURE_7PM,
+                '20': STOPS_FEATURE_8PM,
             }
 
             # Get the route layer based on the time
-            route_feature = ROUTE_FEATURES.get(data['time'], ROUTE_LAYER_6AM)  # Default to ROUTE_LAYER_6AM if time is not found
-            print(f"Using route feature: {route_feature}")
+            stops_feature = STOPS_FEATURES.get(data['time'], STOPS_FEATURE_NONE)
+            print(f"Using stops feature: {stops_feature}")
+
+            # Removing stops
+            print("Removing existing stops from stops feature...")
+            arcpy.management.DeleteFeatures(stops_feature)
 
             # Assign route feature
+            print("Assigning route feature...")
+            ROUTE_FEATURES = {
+                '0': ROUTE_FEATURE_NONE,
+                '6': ROUTE_FEATURE_6AM,
+                '7': ROUTE_FEATURE_7AM,
+                '8': ROUTE_FEATURE_8AM,
+                '9': ROUTE_FEATURE_9AM,
+                '10': ROUTE_FEATURE_10AM,
+                '11': ROUTE_FEATURE_11AM,
+                '12': ROUTE_FEATURE_12PM,
+                '13': ROUTE_FEATURE_1PM,
+                '14': ROUTE_FEATURE_2PM,
+                '15': ROUTE_FEATURE_3PM,
+                '16': ROUTE_FEATURE_4PM,
+                '17': ROUTE_FEATURE_5PM,
+                '18': ROUTE_FEATURE_6PM,
+                '19': ROUTE_FEATURE_7PM,
+                '20': ROUTE_FEATURE_8PM,
+            }
+
+            # Get the route feature based on the time
+            route_feature = ROUTE_FEATURES.get(data['time'], ROUTE_FEATURE_NONE)
+            print(f"Using route feature: {route_feature}")
+
+            # Assign route layer
             print("Assigning route feature...")
             ROUTE_LAYERS = {
                 '0': ROUTE_LAYER_NONE,
@@ -122,7 +182,7 @@ def solve_route():
                 '9': ROUTE_LAYER_9AM,
                 '10': ROUTE_LAYER_10AM,
                 '11': ROUTE_LAYER_11AM,
-                '12': ROUTE_LAYER_12AM,
+                '12': ROUTE_LAYER_12PM,
                 '13': ROUTE_LAYER_1PM,
                 '14': ROUTE_LAYER_2PM,
                 '15': ROUTE_LAYER_3PM,
@@ -134,7 +194,7 @@ def solve_route():
             }
 
             # Get the route layer based on the time
-            route_layer = ROUTE_LAYERS.get(data['time'], ROUTE_LAYER_6AM)  # Default to ROUTE_LAYER_6AM if time is not found
+            route_layer = ROUTE_LAYERS.get(data['time'], ROUTE_LAYER_NONE)
             print(f"Using route layer: {route_layer}")
 
             # Add stops to route layer
@@ -184,14 +244,6 @@ def solve_route():
             with open(GEOJSON_OUTPUT, "r") as f:
                 geojson_data = json.load(f)
 
-            # Function to convert coordinates of each feature
-            #for feature in geojson_data["features"]:
-            #    coords = feature["geometry"]["coordinates"]
-            #    if feature["geometry"]["type"] == "LineString":
-            #        feature["geometry"]["coordinates"] = [
-             #           [list(transformer.transform(x, y)) for x, y in line] for line in coords
-              #      ]
-
             for feature in geojson_data["features"]:
                 #Check if the geometry is of type "LineString"
                 if feature["geometry"]["type"] == "LineString":
@@ -199,7 +251,6 @@ def solve_route():
                     feature["geometry"]["coordinates"] = [
                         list(transformer.transform(x, y)) for x, y in feature["geometry"]["coordinates"]
                     ]
-
 
             # Save the converted GeoJSON to a new file
             with open(GEOJSON_CONVERTED, "w") as f:

@@ -1,16 +1,23 @@
 # dependencies
-front-end/node_modules
+front-end/leaflet-app/node_modules
 outputs/
-front-end/.pnp
-front-end/.pnp.js
-front-end/public/RouteOutput.geojson
-front-end/public/RouteOutputConverted.geojson
+front-end/leaflet-app/.pnp
+front-end/leaflet-app/.pnp.*
+front-end/leaflet-app/.yarn/*
+front-end/leaflet-app/!.yarn/patches
+front-end/leaflet-app/!.yarn/plugins
+front-end/leaflet-app/!.yarn/releases
+front-end/leaflet-app/!.yarn/versions
 
 # testing
-front-end/coverage
+front-end/leaflet-app/coverage
+
+# next.js
+front-end/leaflet-app/.next/
+front-end/leaflet-app/out/
 
 # production
-front-end/build
+front-end/leaflet-app/build
 
 # misc
 .DS_Store
@@ -22,3 +29,5 @@ front-end/.env.production.local
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+front-end/leaflet-app/.vercel
