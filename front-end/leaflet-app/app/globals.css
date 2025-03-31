@@ -1,0 +1,128 @@
+body, html {
+  height: 100%;
+  margin: 0;
+}
+
+.button-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 20px;
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  left: calc(50% + 100px);
+  transform: translateX(-50%);
+  z-index: 1000;
+}
+
+.left-button-container {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 20px;
+  top: 100px;
+  gap: 10px;
+  z-index: 1000;
+  padding: 20px;
+  justify-content: center;
+}
+
+.panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 200px;
+  height: 100vh;
+  background: lightblue;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 999;
+  align-items: center;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 14px;
+  background-color: black;
+  color: white;
+  border: 4px solid transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+button:hover {
+  background-color: green;
+}
+
+.dropdown {
+  padding: 10px 20px;
+  font-size: 14px;
+  background-color: black;
+  color: white;
+  border: 4px solid transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+.dropdown:active,
+.dropdown:focus {
+  outline: none;
+}
+
+.dropdown:hover {
+  background-color: green;
+}
+
+label {
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  font-size: 14px;
+  background-color: black;
+  color: white;
+  border: 4px solid transparent;
+  border-radius: 5px;
+  cursor: default;
+  font-family: Arial, sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 250px;
+  display: block;
+}
+
+/* Styling for selected and regular button states */
+.selected {
+  border-color: green; /* Green border for selected button */
+}
+
+.regular {
+  border-color: none; /* Black border for regular button */
+}
+
+.loader {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-left-color: black;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  z-index: 1001;
+  background: green;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
