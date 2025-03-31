@@ -67,6 +67,12 @@ NETWORK_DATASET = r"C:\Users\awpre\OneDrive\Documents\ArcGIS\Projects\MyProject1
 STOPS_FEATURE_CLASS = os.path.join(GDB_PATH, "Stops")
 ROUTE_OUTPUT = os.path.join(GDB_PATH, "RouteOutput")
 STOPS_FEATURE_CLASS = os.path.join(GDB_PATH, "Stops")
+
+DIRECT_ROUTE_OUTPUT = os.path.join(GDB_PATH, "DirectRouteOutput")
+DIRECT_SHAPEFILE_OUTPUT = r"C:\Users\awpre\MQP_APP\outputs\directShapefileOutput.shp"
+DIRECT_GEOJSON_OUTPUT = r"C:\Users\awpre\MQP_APP\outputs\directGeojsonOutput.shp"
+DIRECT_GEOJSON_CONVERTED = r"C:\Users\awpre\MQP_APP\outputs\directGeojsonOutputConverted.shp"
+
 ROUTE_OUTPUT = os.path.join(GDB_PATH, "RouteOutput")
 SHAPEFILE_OUTPUT = r"C:\Users\awpre\MQP_APP\outputs\shapefileOutput.shp"
 GEOJSON_OUTPUT = r"C:\Users\awpre\MQP_APP\outputs\geojsonOutput.shp"
@@ -96,8 +102,8 @@ def solve_route():
 
         try:
             # Network Analyst extension
+            print("Checking out Network Analyst extension...")
             arcpy.CheckOutExtension("Network")
-            print("Checked out Network Analyst extension.")
 
             # Create or overwrite Stops feature class
             if arcpy.Exists(STOPS_FEATURE_CLASS):
@@ -112,11 +118,6 @@ def solve_route():
             with arcpy.da.InsertCursor(STOPS_FEATURE_CLASS, ["SHAPE@XY", "Name"]) as cursor:
                 cursor.insertRow([(startLng, startLat), "Start"])
                 cursor.insertRow([(endLng, endLat), "End"])
-
-            # Create route layer - replace with assiging route layer based on time
-            #print("Creating route layer...")
-            #route_layer = arcpy.na.MakeRouteLayer(NETWORK_DATASET, "Route", "Length").getOutput(0)
-            #print("Route layer created.")
 
             # Assign stops feature
             print("Assigning stops feature...")
@@ -142,10 +143,6 @@ def solve_route():
             # Get the route layer based on the time
             stops_feature = STOPS_FEATURES.get(data['time'], STOPS_FEATURE_NONE)
             print(f"Using stops feature: {stops_feature}")
-
-            # Removing stops
-            print("Removing existing stops from stops feature...")
-            arcpy.management.DeleteFeatures(stops_feature)
 
             # Assign route feature
             print("Assigning route feature...")
@@ -197,69 +194,20 @@ def solve_route():
             route_layer = ROUTE_LAYERS.get(data['time'], ROUTE_LAYER_NONE)
             print(f"Using route layer: {route_layer}")
 
-            # Add stops to route layer
-            print("Adding stops to route layer...")
-            arcpy.na.AddLocations(route_layer, "Stops", STOPS_FEATURE_CLASS, "", 1000)
+            # Generate selected route
+            route = generateRoute(stops_feature, route_feature, route_layer, ROUTE_OUTPUT, SHAPEFILE_OUTPUT, GEOJSON_OUTPUT, GEOJSON_CONVERTED)
 
-            # Solve route
-            print("Solving route...")
-            arcpy.na.Solve(route_layer)
-            print("Route solved.")
+            # Generate direct route
+            if(data['time'] != '0'):
+                direct_route = generateRoute(STOPS_FEATURE_NONE, ROUTE_FEATURE_NONE, ROUTE_LAYER_NONE, DIRECT_ROUTE_OUTPUT, DIRECT_SHAPEFILE_OUTPUT, DIRECT_GEOJSON_OUTPUT, DIRECT_GEOJSON_CONVERTED)
+            else: 
+                direct_route = route
 
-            # Save route results
-            if arcpy.Exists(ROUTE_OUTPUT):
-                print("Deleting existing RouteOutput...")
-                arcpy.management.Delete(ROUTE_OUTPUT)
-            print("Saving route results to geodatabase...")
-            arcpy.management.CopyFeatures(route_feature, ROUTE_OUTPUT)
-
-            # Save as shapefile
-            if arcpy.Exists(SHAPEFILE_OUTPUT):
-                print("Deleting existing shapefile...")
-                arcpy.management.Delete(SHAPEFILE_OUTPUT)
-            print("Saving route results to shapefile...")
-            arcpy.management.CopyFeatures(route_feature, SHAPEFILE_OUTPUT)
-
-            #print(f"Route saved to: {ROUTE_OUTPUT} (Geodatabase)")
-            print(f"Route saved to: {SHAPEFILE_OUTPUT} (Shapefile)")
-
-            # Save and convert to GeoJSON
-            if arcpy.Exists(GEOJSON_OUTPUT):
-                print("Deleting existing geojson...")
-                arcpy.management.Delete(GEOJSON_OUTPUT)
-            print("Converting to geojson...")
-            gdf = gpd.read_file(SHAPEFILE_OUTPUT)
-            gdf.to_file(GEOJSON_OUTPUT, driver='GeoJSON')
-            #arcpy.FeaturesToJSON_conversion(SHAPEFILE_OUTPUT, GEOJSON_OUTPUT, "FORMATTED")
-
-            # Convert projections
-            print("Converting projection...")
-            source_crs = pyproj.CRS("EPSG:2249")  # Your source CRS
-            target_crs = pyproj.CRS("EPSG:4326")  # WGS84 (lat, lon)
-
-            # Create the transformation object
-            transformer = pyproj.Transformer.from_crs(source_crs, target_crs, always_xy=True)
-
-            # Load your GeoJSON file
-            with open(GEOJSON_OUTPUT, "r") as f:
-                geojson_data = json.load(f)
-
-            for feature in geojson_data["features"]:
-                #Check if the geometry is of type "LineString"
-                if feature["geometry"]["type"] == "LineString":
-                #Reproject each coordinate pair in the LineString
-                    feature["geometry"]["coordinates"] = [
-                        list(transformer.transform(x, y)) for x, y in feature["geometry"]["coordinates"]
-                    ]
-
-            # Save the converted GeoJSON to a new file
-            with open(GEOJSON_CONVERTED, "w") as f:
-                json.dump(geojson_data, f, indent=4)
-
-            # Return the converted GeoJson
-            with open(GEOJSON_CONVERTED, "r") as f:
-                return jsonify(json.load(f))
-
+            return jsonify({
+                "route": route, 
+                "direct_route": direct_route
+            })
+            
         except Exception as e:
             print(f"Arcpy error: {e}")
             return jsonify({"error": f"Arcpy error: {str(e)}"}), 500
@@ -272,6 +220,74 @@ def solve_route():
     except Exception as e:
         print(f"Flask error: {e}")
         return jsonify({"error": str(e)}), 500
+    
+def generateRoute(stops_feature, route_feature, route_layer, output, shapefileOutput, geojsonOutput, geojsonConvertedOutput):
+
+    # Removing stops
+    print("Removing existing stops from stops feature...")
+    arcpy.management.DeleteFeatures(stops_feature)
+
+    # Add stops to route layer
+    print("Adding stops to route layer...")
+    arcpy.na.AddLocations(route_layer, "Stops", STOPS_FEATURE_CLASS, "", 1000)
+
+    # Solve route
+    print("Solving route...")
+    arcpy.na.Solve(route_layer)
+    print("Route solved.")
+
+    # Save route results
+    if arcpy.Exists(output):
+        print("Deleting existing RouteOutput...")
+        arcpy.management.Delete(output)
+    print("Saving route results to geodatabase...")
+    arcpy.management.CopyFeatures(route_feature, output)
+
+    # Save as shapefile
+    if arcpy.Exists(shapefileOutput):
+        print("Deleting existing shapefile...")
+        arcpy.management.Delete(shapefileOutput)
+    print("Saving route results to shapefile...")
+    arcpy.management.CopyFeatures(route_feature, shapefileOutput)
+
+    #print(f"Route saved to: {ROUTE_OUTPUT} (Geodatabase)")
+    print(f"Route saved to: {shapefileOutput} (Shapefile)")
+
+    # Save and convert to GeoJSON
+    if arcpy.Exists(geojsonOutput):
+        print("Deleting existing geojson...")
+        arcpy.management.Delete(geojsonOutput)
+    print("Converting to geojson...")
+    gdf = gpd.read_file(shapefileOutput)
+    gdf.to_file(geojsonOutput, driver='GeoJSON')
+
+    # Convert projections
+    print("Converting projection...")
+    source_crs = pyproj.CRS("EPSG:2249")  # Compatible with leaflet
+    target_crs = pyproj.CRS("EPSG:4326")  # WGS84 (lat, lon)
+
+    # Create the transformation object
+    transformer = pyproj.Transformer.from_crs(source_crs, target_crs, always_xy=True)
+
+    # Load your GeoJSON file
+    with open(geojsonOutput, "r") as f:
+        geojson_data = json.load(f)
+
+    for feature in geojson_data["features"]:
+        #Check if the geometry is of type "LineString"
+        if feature["geometry"]["type"] == "LineString":
+        #Reproject each coordinate pair in the LineString
+            feature["geometry"]["coordinates"] = [
+                list(transformer.transform(x, y)) for x, y in feature["geometry"]["coordinates"]
+            ]
+
+    # Save the converted GeoJSON to a new file
+    with open(geojsonConvertedOutput, "w") as f:
+        json.dump(geojson_data, f, indent=4)
+
+    # Return the converted GeoJson
+    with open(geojsonConvertedOutput, "r") as f:
+        return json.load(f)
 
         
 # Run the Flask app
