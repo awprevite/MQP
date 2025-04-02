@@ -74,18 +74,20 @@ export default function Home() {
   const findLocation = () => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const { lat, lng } = position.coords;
-        if (lat && lng) {
-          setUserCoordinates({ lat, lng });
+        const { latitude, longitude } = position.coords;
+        if (latitude && longitude) {
+          setUserCoordinates({ lat: latitude, lng: longitude });
         } else {
           alert("Unable to parse coordinates");
         }
       },
       (error) => {
-        alert("Could not find your location");
+        console.error("Error getting location:", error);
+        alert("Could not find your location. Ensure location services are enabled.");
       }
     );
-  }
+  };
+  
 
   const polygon = L.polygon([
     [42.20, -71.90],  // Southwest corner, just outside Worcester to the west

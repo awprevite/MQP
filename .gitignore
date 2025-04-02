@@ -1,5 +1,6 @@
 # dependencies
 front-end/leaflet-app/node_modules
+front-end/node_modules
 outputs/
 front-end/leaflet-app/.pnp
 front-end/leaflet-app/.pnp.*
