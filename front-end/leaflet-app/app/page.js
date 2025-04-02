@@ -13,6 +13,13 @@ const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.Map
 const TileLayer = dynamic(() => import('react-leaflet').then((mod) => mod.TileLayer), { ssr: false });
 const GeoJSON = dynamic(() => import('react-leaflet').then((mod) => mod.GeoJSON), { ssr: false });
 
+const customIcon = L.divIcon({
+  className: '',
+  html: '<div class=outer-circle><div class="inner-circle"></div></div>',
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
+})
+
 export default function Home() {
   
   useEffect(() => {
@@ -33,13 +40,23 @@ export default function Home() {
   const [startMarker, setStartMarker] = useState(null);
   const [endMarker, setEndMarker] = useState(null);
   const [currentMarker, setCurrentMarker] = useState(MARKER_START);
-  const [startCoordinateText, setStartCoordinateText] = useState("Start: Place Marker");
-  const [endCoordinateText, setEndCoordinateText] = useState("End: Place Marker");
-  const [geojsonData, setGeojsonData] = useState(null);
-  const [directGeojsonData, setDirectGeojsonData] = useState(null);
+
   const [loading, setLoading] = useState(false);
   const [time, setTime] = useState("");
-  const geojsonLayerRef = useRef(null);
+
+  const [userCoordinates, setUserCoordinates] = useState(null);
+
+  const [geojsonData, setGeojsonData] = useState(null);
+  const coolShapeLength= useRef(0);
+
+  const [directGeojsonData, setDirectGeojsonData] = useState(null);
+  const directShapeLength = useRef(0);
+
+  const formatter = new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 2,  // Specify the number of decimal places
+  });
+
+  const[showMetric, setShowMetric] = useState(false);
 
   const geojsonStyle = {
     color: "green",
@@ -52,6 +69,22 @@ export default function Home() {
     weight: 5,
     opacity: 0.6,
     fillOpacity: 0.5
+  }
+
+  const findLocation = () => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { lat, lng } = position.coords;
+        if (lat && lng) {
+          setUserCoordinates({ lat, lng });
+        } else {
+          alert("Unable to parse coordinates");
+        }
+      },
+      (error) => {
+        alert("Could not find your location");
+      }
+    );
   }
 
   const polygon = L.polygon([
@@ -73,10 +106,10 @@ export default function Home() {
 
           if (currentMarker === MARKER_START) {
             setStartMarker({ lat, lng });
-            setStartCoordinateText(`Start: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+            //setStartCoordinateText(`Start: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
           } else {
             setEndMarker({ lat, lng });
-            setEndCoordinateText(`End: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+            //setEndCoordinateText(`End: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
           }
         }else{
           console.log("clicked too far away")
@@ -117,13 +150,16 @@ export default function Home() {
         if (response.data.direct_route && response.data.direct_route.type === "FeatureCollection") {
           console.log("Correct format")
           setDirectGeojsonData(response.data.direct_route);
+          directShapeLength.current = formatter.format(response.data.direct_route.features[0].properties.Shape_Leng/5280);
+
         } else {
-          setGeojsonData(null)
           console.log("Invalid GeoJSON format or direct route does not exist");
         }
         if (response.data.route && response.data.route.type === "FeatureCollection") {
           console.log("Correct format")
           setGeojsonData(response.data.route);
+          coolShapeLength.current = formatter.format(response.data.route.features[0].properties.Shape_Leng/5280);
+
         } else {
           console.log("Invalid GeoJSON format or route does not exist");
         }
@@ -137,36 +173,36 @@ export default function Home() {
   };
 
   return (
-    <div>
-      <MapContainer center={[42.2626, -71.8079]} zoom={13} style={{ height: "100vh", width: "100%" }}>
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution="&copy; OpenStreetMap contributors"
-        />
-        <GeoJSON key={`0-${directGeojsonData ? JSON.stringify(directGeojsonData) : 'empty'}`} data={directGeojsonData} style={directGeojsonStyle}/>
-        <GeoJSON key={`1-${geojsonData ? JSON.stringify(geojsonData) : 'empty'}`} data={geojsonData} style={geojsonStyle}/>
-        <ClickHandler />
-        {startMarker && (
-          <Marker position={[startMarker.lat, startMarker.lng]}>
-            <Tooltip direction="top" offset={[0, -15]} opacity={1}>
-              Start
-            </Tooltip>
-          </Marker>
-        )}
-        {endMarker && (
-          <Marker position={[endMarker.lat, endMarker.lng]}>
-            <Tooltip direction="top" offset={[0, -15]} opacity={1}>
-              End
-            </Tooltip>
-          </Marker>
-        )}
-      </MapContainer>
-      <div className='panel'>
-        
-        <div className='left-button-container'>
-          <label>Cool Routes Worcester</label>
-          <button className={toggleMarkerStart()} onClick={() => toggleMarker("start")}>Set Start</button>
-          <button className={toggleMarkerEnd()} onClick={() => toggleMarker("end")}>Set End</button>
+    <div className='vertical-container'>
+      <div className='map-container'>
+        <MapContainer center={[42.2626, -71.8079]} zoom={13} style={{ height: "100%", width: "100%" }}>
+          <TileLayer
+            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://carto.com/attributions">CartoDB</a>'
+          />
+          <GeoJSON key={`0-${directGeojsonData ? JSON.stringify(directGeojsonData) : 'empty'}`} data={directGeojsonData} style={directGeojsonStyle}/>
+          <GeoJSON key={`1-${geojsonData ? JSON.stringify(geojsonData) : 'empty'}`} data={geojsonData} style={geojsonStyle}/>
+          {userCoordinates && <Marker icon={customIcon} position={[userCoordinates.lat, userCoordinates.lng]}></Marker>}
+          <ClickHandler />
+          {startMarker && (
+            <Marker icon={customIcon} position={[startMarker.lat, startMarker.lng]}></Marker>
+          )}
+          {endMarker && (
+            <Marker icon={customIcon} position={[endMarker.lat, endMarker.lng]}></Marker>
+          )}
+        </MapContainer>
+      </div>
+      <div className='button-container'>
+        <div className='horizontal-container'>
+          <label>Direct Distance: {directShapeLength.current} Mi</label>
+          <label>Cool Distance: {coolShapeLength.current} Mi</label>
+        </div>
+        <div className='horizontal-container'>
+          <input type='text' placeholder='Origin'/>
+          <button onClick={findLocation}>Locate</button>
+        </div>
+        <div className='horizontal-container'>
+          <input type='text' placeholder='Destination'/>
           <select className='dropdown' value={time} onChange={(e) => setTime(e.target.value)}>
             <option value="" disabled>Select a time</option>
             <option value="6">6 am or earlier</option>
@@ -185,18 +221,16 @@ export default function Home() {
             <option value="19">7 pm</option>
             <option value="20">8 pm or later</option>
           </select>
+        </div>
+        <div className='horizontal-container'>
+          <button className={toggleMarkerStart()} onClick={() => toggleMarker("start")}>Set Start</button>
+          <button className={toggleMarkerEnd()} onClick={() => toggleMarker("end")}>Set End</button>
           <button onClick={sendCoordinatesToAPI}>Calculate Route</button>
+        </div>
+        <div className='loading-modal'>
           {loading &&
             <div className='loader'></div>
           }
-        </div>
-      </div>
-      <div className="button-container">
-        <div>
-          <label>{startCoordinateText}</label>
-        </div>
-        <div>
-          <label>{endCoordinateText}</label>
         </div>
       </div>
     </div>
