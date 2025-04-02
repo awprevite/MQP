@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Marker, useMapEvents } from "react-leaflet";
 import axios from "axios";
@@ -47,6 +47,8 @@ export default function Home() {
   const [directGeojsonData, setDirectGeojsonData] = useState(null);
   const directShapeLength = useRef(0);
 
+  const [boundary, setBoundary ] = useState(null);
+
   const formatter = new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 2,  // Specify the number of decimal places
   });
@@ -62,7 +64,14 @@ export default function Home() {
     weight: 5,
     opacity: 0.6,
     fillOpacity: 0.5
-  }
+  };
+
+  const boundaryStyle = {
+    color: "black",
+    weight: 5,
+    opacity: 1,
+    fillOpacity: 1
+  };
 
   const findLocation = () => {
     navigator.geolocation.getCurrentPosition(
@@ -162,6 +171,22 @@ export default function Home() {
       });
   };
 
+  useEffect(() => {
+    fetch("/boundary.geojson") // Ensure this path is correct
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setBoundary(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching Boundary data:", error);
+      });
+  }, []); // Empty dependency array ensures it runs on mount
+
   return (
     <>
       <div className='map-container'>
@@ -196,6 +221,7 @@ export default function Home() {
           />
           <GeoJSON key={`0-${directGeojsonData ? JSON.stringify(directGeojsonData) : 'empty'}`} data={directGeojsonData} style={directGeojsonStyle}/>
           <GeoJSON key={`1-${geojsonData ? JSON.stringify(geojsonData) : 'empty'}`} data={geojsonData} style={geojsonStyle}/>
+          <GeoJSON data={boundary} style={boundaryStyle}/>
           <ClickHandler />
           {originCoordinates && (<Marker icon={customIconOrigin} position={[originCoordinates.lat, originCoordinates.lng]}></Marker>)}
           {destinationCoordinates && (<Marker icon={customIconDestination} position={[destinationCoordinates.lat, destinationCoordinates.lng]}></Marker>)}
