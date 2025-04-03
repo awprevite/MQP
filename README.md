@@ -17,7 +17,7 @@ Once the user requests to calculate the route, the most direct route (blue) and 
 
 ### Front-end
 2. Navigate to the front-end folder  
-`cd MQP/front-end`  
+`cd MQP/front-end/leaflet-app`  
 3. Install dependencies  
 `npm install`
 4. Run the development server  
