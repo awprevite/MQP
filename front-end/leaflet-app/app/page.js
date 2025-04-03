@@ -51,6 +51,8 @@ export default function Home() {
 
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
+  const [locating, setLocating] = useState(false);
+
   const [time, setTime] = useState("");
 
   const [geojsonData, setGeojsonData] = useState(null);
@@ -86,6 +88,8 @@ export default function Home() {
   };
 
   const findLocation = () => {
+    setLocating(true);
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
@@ -94,9 +98,11 @@ export default function Home() {
         } else {
           showNotification("Unable to parse location coordinates")
         }
+        setLocating(false);
       },
       (error) => {
         showNotification("Error getting location. Please enable location services");
+        setLocating(false);
       }
     );
   };
@@ -197,8 +203,8 @@ export default function Home() {
       <div className='map-container'>
         <button className={`set-origin-button ${toggleMarkerStart()}`} onClick={() => toggleMarker("start")}>Set Origin</button>
         <button className={`set-destination-button ${toggleMarkerEnd()}`} onClick={() => toggleMarker("end")}>Set Destination</button>
-        <button className='calculate-button' onClick={sendCoordinatesToAPI}>Calculate Route</button>
-        <button className='locate-button' onClick={findLocation}><Navigation size={18} /></button>
+        <button className='calculate-button' onClick={sendCoordinatesToAPI} disabled={loading}>Calculate Route</button>
+        <button className='locate-button' onClick={findLocation} disabled={locating}><Navigation size={18} /></button>
         <select className='time-dropdown' value={time} onChange={(e) => setTime(e.target.value)}>
             <option value="" disabled>Select a time</option>
             <option value="6">6 am or earlier</option>
@@ -237,6 +243,7 @@ export default function Home() {
       {loading && <div className='loader'></div>}
       {searching && <div className='searcher'></div>}
       {notification && <div className="notification">{notification}</div>}
+      {locating && <div className='locator'></div>}
     </>
   );
 }
