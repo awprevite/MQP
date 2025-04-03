@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { Marker, useMapEvents } from "react-leaflet";
 import axios from "axios";
 import "leaflet/dist/leaflet.css";
 import "./globals.css"
@@ -25,10 +24,12 @@ const customIconOrigin = L.divIcon({
   iconAnchor: [10, 10],
 })
 
-// Dynamically import MapContainer and GeoJSON components, disabling SSR, Leaflet does not work with SSR
+// Dynamically import react-leaflet components, disabling SSR, avoid window is not defined issues
 const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then((mod) => mod.TileLayer), { ssr: false });
 const GeoJSON = dynamic(() => import('react-leaflet').then((mod) => mod.GeoJSON), { ssr: false });
+const Marker = dynamic(() => import('react-leaflet').then((mod) => mod.Marker), { ssr: false });
+const useMapEvents = dynamic(() => import('react-leaflet').then((mod) => mod.useMapEvents), { ssr: false });
 
 export default function Home() {
 
