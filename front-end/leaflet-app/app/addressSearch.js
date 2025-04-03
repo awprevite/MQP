@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import "./globals.css";
 
-const AddressSearch = ({ className, setUserCoordinates }) => {
+const AddressSearch = ({ className, setUserCoordinates, setSearching, showNotification}) => {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [debounceTimer, setDebounceTimer] = useState(null);
@@ -24,6 +24,7 @@ const AddressSearch = ({ className, setUserCoordinates }) => {
         if (filteredResults.length > 0) {
           setSuggestions(filteredResults);
         } else {
+          showNotification("No results found in Worcester, MA, try typing a more specific address");
           setSuggestions([]);
         }
       })
@@ -43,21 +44,25 @@ const AddressSearch = ({ className, setUserCoordinates }) => {
       if (debounceTimer) {
         clearTimeout(debounceTimer);
       }
+      setSearching(true);
 
       // Set a new timeout to fetch suggestions after 3 seconds after the last input change
       const timer = setTimeout(() => {
         fetchSuggestions(value);
-      }, 3000); // 3 seconds delay
+        setSearching(false);
+      }, 2500); // 3 seconds delay
 
       setDebounceTimer(timer); // Store the timer to clear it later
     } else {
       setSuggestions([]);
+      setSearching(false);
     }
   };
 
   // Handle selecting an address from suggestions
   const handleSelect = (address) => {
-    setQuery(address.display_name);
+    const parts = address.display_name.split(", ");
+    setQuery(`${parts[0]}, ${parts[1]}`); // Set input value to selected address
     setSuggestions([]); // Hide suggestions
 
     // Move map to selected address

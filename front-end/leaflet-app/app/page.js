@@ -9,6 +9,8 @@ import "./globals.css"
 import L from "leaflet";
 import AddressSearch from "./addressSearch";
 import { Navigation } from "lucide-react";
+import { boundaryCoordinates, pointInPolygon } from "./boundary.js";
+
 
 // Dynamically import MapContainer and GeoJSON components, disabling SSR, Leaflet does not work with SSR
 const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), { ssr: false });
@@ -34,11 +36,22 @@ export default function Home() {
   const ORIGIN_MARKER = 0;
   const DESTINATION_MARKER = 1;
 
+  const [notification, setNotification] = useState(null);
+
+  function showNotification(message) {
+    setNotification(message);
+
+    setTimeout(() => {
+      setNotification(null);
+    }, 3000);
+  }
+
   const [originCoordinates, setOriginCoordinates] = useState(null);
   const [destinationCoordinates, setDestinationCoordinates] = useState(null);
   const [currentMarker, setCurrentMarker] = useState(ORIGIN_MARKER);
 
   const [loading, setLoading] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [time, setTime] = useState("");
 
   const [geojsonData, setGeojsonData] = useState(null);
@@ -80,32 +93,25 @@ export default function Home() {
         if (latitude && longitude) {
           setOriginCoordinates({ lat: latitude, lng: longitude });
         } else {
-          alert("Unable to parse coordinates");
+          showNotification("Unable to parse location coordinates")
         }
       },
       (error) => {
-        console.error("Error getting location:", error);
-        alert("Could not find your location. Ensure location services are enabled.");
+        showNotification("Error getting location. Please enable location services");
       }
     );
   };
-  
-  const polygon = L.polygon([
-    [42.20, -71.90],  // Southwest corner, just outside Worcester to the west
-    [42.20, -71.70],  // Southeast corner, just outside Worcester to the east
-    [42.34, -71.70],  // Northeast corner, just outside Worcester to the north
-    [42.34, -71.90],  // Northwest corner, just outside Worcester to the north-west
-    [42.20, -71.90]   // Closing the polygon
-  ]);
 
   // ClickHandler component to handle marker placement
   const ClickHandler = () => {
     useMapEvents({
       click: (e) => {
         const { lat, lng } = e.latlng;
-        const point = L.latLng(lat, lng);
 
-        if (polygon.getBounds().contains(point)) {
+        const polygon = (boundaryCoordinates);
+        const point = {lat: lat, lng: lng};
+
+        if (pointInPolygon(point, polygon)) {
 
           if (currentMarker === ORIGIN_MARKER) {
             setOriginCoordinates({ lat, lng });
@@ -113,7 +119,7 @@ export default function Home() {
             setDestinationCoordinates({ lat, lng });
           }
         }else{
-          console.log("clicked too far away")
+          showNotification("Please select a point within the boundary");
         }
       },
     });
@@ -134,37 +140,36 @@ export default function Home() {
   const sendCoordinatesToAPI = (e) => {
 
     if (!originCoordinates || !destinationCoordinates || time === "") {
-      console.log("Both markers need to be placed on the map and a time must be entered before sending.");
+      showNotification("Please place both origin and destination markers and seclect and a time");
       return;
     }
 
     setLoading(true);
 
     const coordinates = { start: originCoordinates, end: destinationCoordinates, time: time };
-    console.log(coordinates);
 
     axios.post("http://127.0.0.1:5000/temp", coordinates)
       .then((response) => {
-        console.log("Data received successfully:", response.data);
+        //console.log("Data received successfully:", response.data);
         if (response.data.direct_route && response.data.direct_route.type === "FeatureCollection") {
-          console.log("Correct format")
+          //console.log("Correct format")
           setDirectGeojsonData(response.data.direct_route);
           directShapeLength.current = formatter.format(response.data.direct_route.features[0].properties.Shape_Leng/5280);
 
         } else {
-          console.log("Invalid GeoJSON format or direct route does not exist");
+          //console.log("Invalid GeoJSON format or direct route does not exist");
         }
         if (response.data.route && response.data.route.type === "FeatureCollection") {
-          console.log("Correct format")
+          //console.log("Correct format")
           setGeojsonData(response.data.route);
           coolShapeLength.current = formatter.format(response.data.route.features[0].properties.Shape_Leng/5280);
 
         } else {
-          console.log("Invalid GeoJSON format or route does not exist");
+          //console.log("Invalid GeoJSON format or route does not exist");
         }
       })
       .catch((error) => {
-        console.error("Error sending data:", error);
+        //console.error("Error sending data:", error);
       })
       .finally(() => {
         setLoading(false);
@@ -172,7 +177,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetch("/boundary.geojson") // Ensure this path is correct
+    fetch("/boundary.geojson")
       .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
@@ -183,9 +188,9 @@ export default function Home() {
         setBoundary(data);
       })
       .catch((error) => {
-        console.error("Error fetching Boundary data:", error);
+        //console.error("Error fetching Boundary data:", error);
       });
-  }, []); // Empty dependency array ensures it runs on mount
+  }, []);
 
   return (
     <>
@@ -212,8 +217,8 @@ export default function Home() {
             <option value="19">7 pm</option>
             <option value="20">8 pm or later</option>
           </select>
-        <AddressSearch className='origin-input' setUserCoordinates={setOriginCoordinates} />
-        <AddressSearch className='destination-input' setUserCoordinates={setDestinationCoordinates} />
+        <AddressSearch className='origin-input' setUserCoordinates={setOriginCoordinates} setSearching={setSearching} showNotification={showNotification}/>
+        <AddressSearch className='destination-input' setUserCoordinates={setDestinationCoordinates} setSearching={setSearching} showNotification={showNotification}/>
         <MapContainer center={[42.2626, -71.8079]} zoom={13} style={{ height: "100%", width: "100%"} } zoomControl={false}>
           <TileLayer
             url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
@@ -229,11 +234,9 @@ export default function Home() {
         <label className='direct-distance'>Direct Distance: {directShapeLength.current} Mi</label>
         <label className='cool-distance'>Cool Distance: {coolShapeLength.current} Mi</label>
       </div>
-      <div className='loading-modal'>
-        {loading &&
-          <div className='loader'></div>
-        }
-      </div>
+      {loading && <div className='loader'></div>}
+      {searching && <div className='searcher'></div>}
+      {notification && <div className="notification">{notification}</div>}
     </>
   );
 }
