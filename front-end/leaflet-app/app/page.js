@@ -11,12 +11,6 @@ import AddressSearch from "./addressSearch";
 import { Navigation } from "lucide-react";
 import { boundaryCoordinates, pointInPolygon } from "./boundary.js";
 
-
-// Dynamically import MapContainer and GeoJSON components, disabling SSR, Leaflet does not work with SSR
-const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then((mod) => mod.TileLayer), { ssr: false });
-const GeoJSON = dynamic(() => import('react-leaflet').then((mod) => mod.GeoJSON), { ssr: false });
-
 const customIconDestination = L.divIcon({
   className: '',
   html: '<div class=outer-circle><div class="inner-circle-white"></div></div>',
@@ -30,6 +24,11 @@ const customIconOrigin = L.divIcon({
   iconSize: [20, 20],
   iconAnchor: [10, 10],
 })
+
+// Dynamically import MapContainer and GeoJSON components, disabling SSR, Leaflet does not work with SSR
+const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import('react-leaflet').then((mod) => mod.TileLayer), { ssr: false });
+const GeoJSON = dynamic(() => import('react-leaflet').then((mod) => mod.GeoJSON), { ssr: false });
 
 export default function Home() {
 
@@ -69,14 +68,14 @@ export default function Home() {
   const geojsonStyle = {
     color: "green",
     weight: 5,
-    opacity: 0.6,
-    fillOpacity: 0.5
+    opacity: 1,
+    fillOpacity: 1
   };
   const directGeojsonStyle = {
-    color: "blue",
+    color: "black",
     weight: 5,
     opacity: 0.6,
-    fillOpacity: 0.5
+    fillOpacity: 0.6
   };
 
   const boundaryStyle = {
@@ -147,6 +146,7 @@ export default function Home() {
     setLoading(true);
 
     const coordinates = { start: originCoordinates, end: destinationCoordinates, time: time };
+    //console.log(coordinates);
 
     axios.post("http://127.0.0.1:5000/temp", coordinates)
       .then((response) => {

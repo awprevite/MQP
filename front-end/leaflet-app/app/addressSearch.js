@@ -66,7 +66,7 @@ const AddressSearch = ({ className, setUserCoordinates, setSearching, showNotifi
     setSuggestions([]); // Hide suggestions
 
     // Move map to selected address
-    setUserCoordinates({ lat: address.lat, lng: address.lon });
+    setUserCoordinates({ lat: parseFloat(address.lat), lng: parseFloat(address.lon) });
   };
 
   return (
@@ -76,7 +76,7 @@ const AddressSearch = ({ className, setUserCoordinates, setSearching, showNotifi
         type='text'
         value={query}
         onChange={handleInputChange}
-        placeholder={`search for ${className === "origin-input" ? "origin" : "destination"} address`}
+        placeholder={`search for ${className === "origin-input" ? "origin" : "dest"} address`}
       />
 
       {/* Autocomplete dropdown */}
