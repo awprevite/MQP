@@ -4,7 +4,7 @@ body, html {
   padding: 0;
   overflow: hidden;
   font-family: Arial;
-  font-size: 13px;
+  font-size: 16px;
 }
 
 .vertical-container {
@@ -82,7 +82,7 @@ input:focus {
   top: 55px;
   left: 10px;
   z-index: 1000;
-  height: 6vh;
+  height: 30vh;
   width: 38vw;
   color: white;
   background-color: black;
@@ -108,7 +108,7 @@ input:focus {
   top: 55px;
   right: 55px;
   z-index: 1000;
-  height: 6vh;
+  height: 30vh;
   width: 38vw;
   color: white;
   background-color: black;
@@ -205,7 +205,6 @@ ul {
   color: white;
   background-color: black;
   padding: 5px;
-  font-size: 10;
   overflow: hidden;
 }
 
@@ -298,7 +297,6 @@ ul {
   padding: 15px 30px;
   border-radius: 5px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-  font-size: 16px;
   z-index: 1001;
   animation: fade-in-out 3s ease-in-out;
   justify-content: center;

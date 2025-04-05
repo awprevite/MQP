@@ -88,7 +88,7 @@ const AddressSearch = ({ className, setUserCoordinates, setSearching, showNotifi
               onClick={() => handleSelect(item)}
               style={{ cursor: "pointer", padding: "5px" }}
             >
-              {item.display_name}
+              {`${item.display_name.split(", ")[0]}, ${item.display_name.split(", ")[1]}`}
             </li>
           ))}
         </ul>

@@ -253,8 +253,8 @@ export default function Home() {
           {destinationCoordinates && (<CircleMarker center={[destinationCoordinates.lat, destinationCoordinates.lng]} radius={10} pathOptions={destinationCircleStyle}></CircleMarker>)}
 
         </MapContainer>
-        <label className='direct-distance'>Direct Distance: {directShapeLength.current} Mi</label>
-        <label className='cool-distance'>Cool Distance: {coolShapeLength.current} Mi</label>
+        <label className='direct-distance'>Direct: {directShapeLength.current} Mi</label>
+        <label className='cool-distance'>Cool: {coolShapeLength.current} Mi</label>
       </div>
       {loading && <div className='loader'></div>}
       {searching && <div className='searcher'></div>}
