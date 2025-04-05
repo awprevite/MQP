@@ -7,6 +7,11 @@ body, html {
   font-size: 16px;
 }
 
+input, textarea, select, button, label, ul, li {
+  font-family: Arial;
+  font-size: 16px;
+}
+
 .vertical-container {
   height: 100%;
   display: flex;
