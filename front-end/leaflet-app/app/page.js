@@ -5,33 +5,42 @@ import dynamic from "next/dynamic";
 import axios from "axios";
 import "leaflet/dist/leaflet.css";
 import "./globals.css"
-import L from "leaflet";
+//import L from "leaflet";
 import AddressSearch from "./addressSearch";
 import { Navigation } from "lucide-react";
 import { boundaryCoordinates, pointInPolygon } from "./boundary.js";
-
-const customIconDestination = L.divIcon({
-  className: '',
-  html: '<div class=outer-circle><div class="inner-circle-white"></div></div>',
-  iconSize: [20, 20],
-  iconAnchor: [10, 10],
-})
-
-const customIconOrigin = L.divIcon({
-  className: '',
-  html: '<div class=outer-circle><div class="inner-circle-green"></div></div>',
-  iconSize: [20, 20],
-  iconAnchor: [10, 10],
-})
+import { useMapEvents } from "react-leaflet";
 
 // Dynamically import react-leaflet components, disabling SSR, avoid window is not defined issues
 const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then((mod) => mod.TileLayer), { ssr: false });
 const GeoJSON = dynamic(() => import('react-leaflet').then((mod) => mod.GeoJSON), { ssr: false });
 const Marker = dynamic(() => import('react-leaflet').then((mod) => mod.Marker), { ssr: false });
-const useMapEvents = dynamic(() => import('react-leaflet').then((mod) => mod.useMapEvents), { ssr: false });
+//const useMapEvents = dynamic(() => import('react-leaflet').then((mod) => mod.useMapEvents), { ssr: false });
+const CircleMarker = dynamic(() => import('react-leaflet').then((mod) => mod.CircleMarker), { ssr: false });
+//const DivIcon = dynamic(() => import('react-leaflet').then((mod) => mod.DivIcon), { ssr: false });
+
+//const L = dynamic(() => import('leaflet').then((mod) => mod.default), { ssr: false });
+
+//dynamic(() => import('leaflet/dist/leaflet.css').then((mod) => mod.default), { ssr: false });
+
 
 export default function Home() {
+
+  const originCircleStyle = {
+    color: "black", // Border color
+    weight: 3,     // Border width
+    fillColor: "green", // Fill color
+    fillOpacity: 0.5, // Fill opacity
+  };
+
+  const destinationCircleStyle = {
+    color: "black", // Border color
+    weight: 3,     // Border width
+    fillColor: "white", // Fill color
+    fillOpacity: 0.5, // Fill opacity
+  };
+
 
   const ORIGIN_MARKER = 0;
   const DESTINATION_MARKER = 1;
@@ -129,6 +138,7 @@ export default function Home() {
         }
       },
     });
+    return null;
   };
 
   // Toggle marker between start and end
@@ -146,7 +156,7 @@ export default function Home() {
   const sendCoordinatesToAPI = (e) => {
 
     if (!originCoordinates || !destinationCoordinates || time === "") {
-      showNotification("Please place both origin and destination markers and seclect and a time");
+      showNotification("Please place both origin and destination markers and select and a time");
       return;
     }
 
@@ -199,6 +209,9 @@ export default function Home() {
       });
   }, []);
 
+  //icon={<div className='outer-circle'><div className='inner-circle-white'></div></div>}
+  //icon={<div className='outer-circle'><div className='inner-circle-green'></div></div>}
+
   return (
     <>
       <div className='map-container'>
@@ -227,16 +240,18 @@ export default function Home() {
         <AddressSearch className='origin-input' setUserCoordinates={setOriginCoordinates} setSearching={setSearching} showNotification={showNotification}/>
         <AddressSearch className='destination-input' setUserCoordinates={setDestinationCoordinates} setSearching={setSearching} showNotification={showNotification}/>
         <MapContainer center={[42.2626, -71.8079]} zoom={13} style={{ height: "100%", width: "100%"} } zoomControl={false}>
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://carto.com/attributions">CartoDB</a>'
-          />
+          <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png" attribution='&copy; <a href="https://carto.com/attributions">CartoDB</a>'/>
           <GeoJSON key={`0-${directGeojsonData ? JSON.stringify(directGeojsonData) : 'empty'}`} data={directGeojsonData} style={directGeojsonStyle}/>
           <GeoJSON key={`1-${geojsonData ? JSON.stringify(geojsonData) : 'empty'}`} data={geojsonData} style={geojsonStyle}/>
           <GeoJSON data={boundary} style={boundaryStyle}/>
           <ClickHandler />
-          {originCoordinates && (<Marker icon={customIconOrigin} position={[originCoordinates.lat, originCoordinates.lng]}></Marker>)}
-          {destinationCoordinates && (<Marker icon={customIconDestination} position={[destinationCoordinates.lat, destinationCoordinates.lng]}></Marker>)}
+
+          {/* {originCoordinates && (<Marker icon={customIconOrigin} position={[originCoordinates.lat, originCoordinates.lng]}></Marker>)}
+          {destinationCoordinates && (<Marker icon={customIconDestination} position={[destinationCoordinates.lat, destinationCoordinates.lng]}></Marker>)} */}
+
+          {originCoordinates && (<CircleMarker center={[originCoordinates.lat, originCoordinates.lng]} radius={10} pathOptions={originCircleStyle}></CircleMarker>)}
+          {destinationCoordinates && (<CircleMarker center={[destinationCoordinates.lat, destinationCoordinates.lng]} radius={10} pathOptions={destinationCircleStyle}></CircleMarker>)}
+
         </MapContainer>
         <label className='direct-distance'>Direct Distance: {directShapeLength.current} Mi</label>
         <label className='cool-distance'>Cool Distance: {coolShapeLength.current} Mi</label>
