@@ -3,24 +3,27 @@ import axios from "axios";
 import "./globals.css";
 
 const AddressSearch = ({ className, setUserCoordinates, setSearching, showNotification}) => {
+
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [debounceTimer, setDebounceTimer] = useState(null);
 
   // Fetch autocomplete suggestions
   const fetchSuggestions = (address) => {
+
     const api = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&addressdetails=1&limit=5&countrycodes=us`;
 
-    axios
-      .get(api)
+    axios.get(api)
       .then((response) => {
 
+        // Filter to include only results in Worcester, MA
         const filteredResults = response.data.filter(item => {
           const city = item.address?.city;
           const state = item.address?.state;
           return city === 'Worcester' && state === 'Massachusetts';
         });
 
+        // If there are results, show them
         if (filteredResults.length > 0) {
           setSuggestions(filteredResults);
         } else {
@@ -29,7 +32,7 @@ const AddressSearch = ({ className, setUserCoordinates, setSearching, showNotifi
         }
       })
       .catch((error) => {
-        console.error("Error fetching suggestions:", error);
+        //console.error("Error fetching suggestions:", error);
       });
   };
 
@@ -38,21 +41,22 @@ const AddressSearch = ({ className, setUserCoordinates, setSearching, showNotifi
     const value = event.target.value;
     setQuery(value);
 
-    // If the input length is greater than 2
+    // Wait for atleast 3 characters to be entered, unlikely to find a match with less
+    // Also wait for 2.5 seconds after the last input change to not flood the API with requests
     if (value.length > 2) {
-      // Clear the previous timeout if user types again before 3 seconds
+      // Clear the previous timeout if user types again before 2.5 seconds
       if (debounceTimer) {
         clearTimeout(debounceTimer);
       }
       setSearching(true);
 
-      // Set a new timeout to fetch suggestions after 3 seconds after the last input change
+      // Set a new timeout to fetch suggestions after 2.5 seconds after the last input change
       const timer = setTimeout(() => {
         fetchSuggestions(value);
         setSearching(false);
-      }, 2500); // 3 seconds delay
+      }, 2500);
 
-      setDebounceTimer(timer); // Store the timer to clear it later
+      setDebounceTimer(timer);
     } else {
       setSuggestions([]);
       setSearching(false);
@@ -61,6 +65,8 @@ const AddressSearch = ({ className, setUserCoordinates, setSearching, showNotifi
 
   // Handle selecting an address from suggestions
   const handleSelect = (address) => {
+
+    // Only take the first two parts of the address, the whole display name is very long
     const parts = address.display_name.split(", ");
     setQuery(`${parts[0]}, ${parts[1]}`); // Set input value to selected address
     setSuggestions([]); // Hide suggestions
@@ -83,11 +89,9 @@ const AddressSearch = ({ className, setUserCoordinates, setSearching, showNotifi
       {suggestions.length > 0 && (
         <ul className={className === "origin-input" ? "origin-ul" : "destination-ul"}>
           {suggestions.map((item) => (
-            <li 
-              key={item.place_id} 
-              onClick={() => handleSelect(item)}
-              style={{ cursor: "pointer", padding: "5px" }}
-            >
+            <li key={item.place_id} onClick={() => handleSelect(item)} style={{ cursor: "pointer", padding: "5px" }}>
+
+              {/* Display only the first two parts of the address to allow for multiple suggestions to show up */}
               {`${item.display_name.split(", ")[0]}, ${item.display_name.split(", ")[1]}`}
             </li>
           ))}

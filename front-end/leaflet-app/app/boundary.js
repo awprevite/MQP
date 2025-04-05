@@ -1,4 +1,4 @@
-
+// Worcester boundary coordinates, same as the geojson file
 export const boundaryCoordinates = [
   [42.31125981163397, -71.76826678481181],
   [42.29622129331082, -71.75854175122491],
@@ -31,9 +31,11 @@ export function pointInPolygon(point, polygon) {
     const xi = polygon[i][1], yi = polygon[i][0];
     const xj = polygon[j][1], yj = polygon[j][0];
 
-    // Check if the point is on the edge
+    // Check if the point passes through the edge
     if ((yi > y) !== (yj > y) &&
-        (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+      (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+
+      // If it does, toggle the inside variable, if the total number of crossing is odd, the point is inside
       inside = !inside;
     }
   }

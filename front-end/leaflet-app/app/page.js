@@ -1,52 +1,30 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from "react";
+import { useMapEvents } from "react-leaflet";
+import { Navigation } from "lucide-react";
 import dynamic from "next/dynamic";
 import axios from "axios";
 import "leaflet/dist/leaflet.css";
 import "./globals.css"
-//import L from "leaflet";
 import AddressSearch from "./addressSearch";
-import { Navigation } from "lucide-react";
-import { boundaryCoordinates, pointInPolygon } from "./boundary.js";
-import { useMapEvents } from "react-leaflet";
+import { boundaryCoordinates, pointInPolygon } from "./boundary";
 
 // Dynamically import react-leaflet components, disabling SSR, avoid window is not defined issues
 const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then((mod) => mod.TileLayer), { ssr: false });
 const GeoJSON = dynamic(() => import('react-leaflet').then((mod) => mod.GeoJSON), { ssr: false });
-const Marker = dynamic(() => import('react-leaflet').then((mod) => mod.Marker), { ssr: false });
-//const useMapEvents = dynamic(() => import('react-leaflet').then((mod) => mod.useMapEvents), { ssr: false });
 const CircleMarker = dynamic(() => import('react-leaflet').then((mod) => mod.CircleMarker), { ssr: false });
-//const DivIcon = dynamic(() => import('react-leaflet').then((mod) => mod.DivIcon), { ssr: false });
-
-//const L = dynamic(() => import('leaflet').then((mod) => mod.default), { ssr: false });
-
-//dynamic(() => import('leaflet/dist/leaflet.css').then((mod) => mod.default), { ssr: false });
-
 
 export default function Home() {
 
-  const originCircleStyle = {
-    color: "black", // Border color
-    weight: 3,     // Border width
-    fillColor: "green", // Fill color
-    fillOpacity: 0.5, // Fill opacity
-  };
-
-  const destinationCircleStyle = {
-    color: "black", // Border color
-    weight: 3,     // Border width
-    fillColor: "white", // Fill color
-    fillOpacity: 0.5, // Fill opacity
-  };
-
-
+  // Active marker state
   const ORIGIN_MARKER = 0;
   const DESTINATION_MARKER = 1;
+  const [currentMarker, setCurrentMarker] = useState(ORIGIN_MARKER);
 
+  // Notification state and logic
   const [notification, setNotification] = useState(null);
-
   function showNotification(message) {
     setNotification(message);
 
@@ -55,28 +33,45 @@ export default function Home() {
     }, 3000);
   }
 
+  // Coordinate and time states, this is the info sent to the API
   const [originCoordinates, setOriginCoordinates] = useState(null);
   const [destinationCoordinates, setDestinationCoordinates] = useState(null);
-  const [currentMarker, setCurrentMarker] = useState(ORIGIN_MARKER);
+  const [time, setTime] = useState("");
 
+  // Loading/searching states
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [locating, setLocating] = useState(false);
 
-  const [time, setTime] = useState("");
-
+  // Route and route distance states
   const [geojsonData, setGeojsonData] = useState(null);
   const coolShapeLength= useRef(0);
-
   const [directGeojsonData, setDirectGeojsonData] = useState(null);
   const directShapeLength = useRef(0);
 
-  const [boundary, setBoundary ] = useState(null);
-
+  // Formatter for distances
   const formatter = new Intl.NumberFormat('en-US', {
-    maximumFractionDigits: 2,  // Specify the number of decimal places
+    maximumFractionDigits: 2,
   });
 
+  // Worcester boundary state, loaded on mount within use effect
+  const [boundary, setBoundary ] = useState(null);
+
+  // Marker styles
+  const originCircleStyle = {
+    color: "black",     // Border color
+    weight: 3,          // Border width
+    fillColor: "green", // Fill color
+    fillOpacity: 1,     // Fill opacity
+  };
+  const destinationCircleStyle = {
+    color: "black",     // Border color
+    weight: 3,          // Border width
+    fillColor: "white", // Fill color
+    fillOpacity: 1,     // Fill opacity
+  };
+
+  // GeoJSON styles, routes and boundary
   const geojsonStyle = {
     color: "green",
     weight: 5,
@@ -89,7 +84,6 @@ export default function Home() {
     opacity: 0.6,
     fillOpacity: 0.6
   };
-
   const boundaryStyle = {
     color: "black",
     weight: 5,
@@ -97,14 +91,26 @@ export default function Home() {
     fillOpacity: 1
   };
 
+  // Function to find the user's location
   const findLocation = () => {
     setLocating(true);
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
+
+        // If valid response
         if (latitude && longitude) {
-          setOriginCoordinates({ lat: latitude, lng: longitude });
+          const polygon = (boundaryCoordinates);
+          const point = {lat: latitude, lng: longitude};
+
+          // Check if the user is in Worcester
+          if (pointInPolygon(point, polygon)) {
+            setOriginCoordinates({ lat: latitude, lng: longitude });
+          } else {
+            showNotification("Must be in Worcester, MA, to use your location");
+          }
+
         } else {
           showNotification("Unable to parse location coordinates")
         }
@@ -117,7 +123,7 @@ export default function Home() {
     );
   };
 
-  // ClickHandler component to handle marker placement
+  // ClickHandler component to handle marker placement on map tap
   const ClickHandler = () => {
     useMapEvents({
       click: (e) => {
@@ -126,13 +132,16 @@ export default function Home() {
         const polygon = (boundaryCoordinates);
         const point = {lat: lat, lng: lng};
 
+        // Check if the clicked point is in Worcester
         if (pointInPolygon(point, polygon)) {
 
+          // Update marker location based on selected marker
           if (currentMarker === ORIGIN_MARKER) {
             setOriginCoordinates({ lat, lng });
           } else {
             setDestinationCoordinates({ lat, lng });
           }
+
         }else{
           showNotification("Please select a point within the boundary");
         }
@@ -141,7 +150,7 @@ export default function Home() {
     return null;
   };
 
-  // Toggle marker between start and end
+  // Toggle marker between origin and destination
   const toggleMarker = (which) => {
     if (which === "start") {
       setCurrentMarker(ORIGIN_MARKER);
@@ -149,40 +158,35 @@ export default function Home() {
       setCurrentMarker(DESTINATION_MARKER);
     }
   };
-
   const toggleMarkerStart = () => (currentMarker === ORIGIN_MARKER ? "selected" : "regular");
   const toggleMarkerEnd = () => (currentMarker === DESTINATION_MARKER ? "selected" : "regular");
 
+  // Function to send coordinates to the API, response contains geojson data for the direct and cool route
   const sendCoordinatesToAPI = (e) => {
 
+    // Check if has time and info for both markers
     if (!originCoordinates || !destinationCoordinates || time === "") {
       showNotification("Please place both origin and destination markers and select and a time");
       return;
     }
 
     setLoading(true);
-
     const coordinates = { start: originCoordinates, end: destinationCoordinates, time: time };
-    //console.log(coordinates);
 
+    // Update this with public API URL !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     axios.post("http://127.0.0.1:5000/temp", coordinates)
       .then((response) => {
-        //console.log("Data received successfully:", response.data);
+
+        // Check if the direct route was returned with the correct data type
         if (response.data.direct_route && response.data.direct_route.type === "FeatureCollection") {
-          //console.log("Correct format")
           setDirectGeojsonData(response.data.direct_route);
           directShapeLength.current = formatter.format(response.data.direct_route.features[0].properties.Shape_Leng/5280);
-
-        } else {
-          //console.log("Invalid GeoJSON format or direct route does not exist");
         }
+
+        // Check if the cool route was returned with the correct data type
         if (response.data.route && response.data.route.type === "FeatureCollection") {
-          //console.log("Correct format")
           setGeojsonData(response.data.route);
           coolShapeLength.current = formatter.format(response.data.route.features[0].properties.Shape_Leng/5280);
-
-        } else {
-          //console.log("Invalid GeoJSON format or route does not exist");
         }
       })
       .catch((error) => {
@@ -193,6 +197,7 @@ export default function Home() {
       });
   };
 
+  // Load the Worcester boundary on mount
   useEffect(() => {
     fetch("/boundary.geojson")
       .then((response) => {
@@ -209,9 +214,6 @@ export default function Home() {
       });
   }, []);
 
-  //icon={<div className='outer-circle'><div className='inner-circle-white'></div></div>}
-  //icon={<div className='outer-circle'><div className='inner-circle-green'></div></div>}
-
   return (
     <>
       <div className='map-container'>
@@ -219,6 +221,7 @@ export default function Home() {
         <button className={`set-destination-button ${toggleMarkerEnd()}`} onClick={() => toggleMarker("end")}>Set Destination</button>
         <button className='calculate-button' onClick={sendCoordinatesToAPI} disabled={loading}>Calculate Route</button>
         <button className='locate-button' onClick={findLocation} disabled={locating}><Navigation size={18} /></button>
+
         <select className='time-dropdown' value={time} onChange={(e) => setTime(e.target.value)}>
             <option value="" disabled>Select a time</option>
             <option value="6">6 am or earlier</option>
@@ -237,29 +240,30 @@ export default function Home() {
             <option value="19">7 pm</option>
             <option value="20">8 pm or later</option>
           </select>
+
         <AddressSearch className='origin-input' setUserCoordinates={setOriginCoordinates} setSearching={setSearching} showNotification={showNotification}/>
         <AddressSearch className='destination-input' setUserCoordinates={setDestinationCoordinates} setSearching={setSearching} showNotification={showNotification}/>
+
         <MapContainer center={[42.2626, -71.8079]} zoom={13} style={{ height: "100%", width: "100%"} } zoomControl={false}>
+
           <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png" attribution='&copy; <a href="https://carto.com/attributions">CartoDB</a>'/>
           <GeoJSON key={`0-${directGeojsonData ? JSON.stringify(directGeojsonData) : 'empty'}`} data={directGeojsonData} style={directGeojsonStyle}/>
           <GeoJSON key={`1-${geojsonData ? JSON.stringify(geojsonData) : 'empty'}`} data={geojsonData} style={geojsonStyle}/>
           <GeoJSON data={boundary} style={boundaryStyle}/>
           <ClickHandler />
 
-          {/* {originCoordinates && (<Marker icon={customIconOrigin} position={[originCoordinates.lat, originCoordinates.lng]}></Marker>)}
-          {destinationCoordinates && (<Marker icon={customIconDestination} position={[destinationCoordinates.lat, destinationCoordinates.lng]}></Marker>)} */}
-
           {originCoordinates && (<CircleMarker center={[originCoordinates.lat, originCoordinates.lng]} radius={10} pathOptions={originCircleStyle}></CircleMarker>)}
           {destinationCoordinates && (<CircleMarker center={[destinationCoordinates.lat, destinationCoordinates.lng]} radius={10} pathOptions={destinationCircleStyle}></CircleMarker>)}
 
         </MapContainer>
+
         <label className='direct-distance'>Direct: {directShapeLength.current} Mi</label>
         <label className='cool-distance'>Cool: {coolShapeLength.current} Mi</label>
       </div>
       {loading && <div className='loader'></div>}
       {searching && <div className='searcher'></div>}
-      {notification && <div className="notification">{notification}</div>}
       {locating && <div className='locator'></div>}
+      {notification && <div className="notification">{notification}</div>}
     </>
   );
 }
