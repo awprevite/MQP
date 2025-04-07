@@ -81,7 +81,7 @@ GEOJSON_CONVERTED = r"C:\Users\awpre\MQP_APP\outputs\geojsonOutputConverted.shp"
 
 app = Flask(__name__)
 CORS(app)
-@app.route('/temp', methods=['POST'])
+@app.route('/route', methods=['POST'])
 def solve_route():
 
     try:

@@ -174,7 +174,7 @@ export default function Home() {
     const coordinates = { start: originCoordinates, end: destinationCoordinates, time: time };
 
     // Update this with public API URL !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    axios.post("http://127.0.0.1:5000/temp", coordinates)
+    axios.post("https://subtle-cowbird-elegant.ngrok-free.app/route", coordinates)
       .then((response) => {
 
         // Check if the direct route was returned with the correct data type
@@ -190,7 +190,7 @@ export default function Home() {
         }
       })
       .catch((error) => {
-        //console.error("Error sending data:", error);
+        showNotification("Error reaching the server");
       })
       .finally(() => {
         setLoading(false);
