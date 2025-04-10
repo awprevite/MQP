@@ -5,6 +5,7 @@ import os
 import json
 import geopandas as gpd
 import pyproj
+from multiprocessing import Queue, Process
 
 # Set up paths on server start up
 
@@ -77,149 +78,167 @@ ROUTE_OUTPUT = os.path.join(GDB_PATH, "RouteOutput")
 SHAPEFILE_OUTPUT = r"C:\Users\awpre\MQP_APP\outputs\shapefileOutput.shp"
 GEOJSON_OUTPUT = r"C:\Users\awpre\MQP_APP\outputs\geojsonOutput.shp"
 GEOJSON_CONVERTED = r"C:\Users\awpre\MQP_APP\outputs\geojsonOutputConverted.shp"
-# Fix these paths when running on windows laptop
 
 app = Flask(__name__)
 CORS(app)
+
+task_queue = Queue()
+result_queue = Queue()
+
+def worker(task_queue, result_queue):
+    while True:
+        task = task_queue.get()
+        if task is None:
+            break
+
+        try:
+
+            start = task['start']
+            startLat = start['lat']
+            startLng = start['lng']
+            end = task['end']
+            endLat = end['lat']
+            endLng = end['lng']
+            time = task['time']
+
+            print(f"Start coordinates: ({startLat}, {startLng}), End coordinates: ({endLat}, {endLng}), Time: ({time})")
+
+            if not task or 'start' not in task or 'end' not in task or 'time' not in task:
+                print("Invalid input detected.")
+                return jsonify({"error": "Invalid input. Provide 'start' and 'end' coordinates and 'time'."}), 400
+
+            try:
+                # Network Analyst extension
+                print("Checking out Network Analyst extension...")
+                arcpy.CheckOutExtension("Network")
+
+                # Create or overwrite Stops feature class
+                if arcpy.Exists(STOPS_FEATURE_CLASS):
+                    print("Deleting existing Stops feature class...")
+                    arcpy.management.Delete(STOPS_FEATURE_CLASS)
+                print("Creating Stops feature class...")
+                arcpy.management.CreateFeatureclass(GDB_PATH, "Stops", "POINT", spatial_reference=arcpy.SpatialReference(4326))
+                arcpy.management.AddField(STOPS_FEATURE_CLASS, "Name", "TEXT")
+
+                # Insert start and end points
+                print("Inserting start and end points into Stops...")
+                with arcpy.da.InsertCursor(STOPS_FEATURE_CLASS, ["SHAPE@XY", "Name"]) as cursor:
+                    cursor.insertRow([(startLng, startLat), "Start"])
+                    cursor.insertRow([(endLng, endLat), "End"])
+
+                # Assign stops feature
+                print("Assigning stops feature...")
+                STOPS_FEATURES = {
+                    '0': STOPS_FEATURE_NONE,
+                    '6': STOPS_FEATURE_6AM,
+                    '7': STOPS_FEATURE_7AM,
+                    '8': STOPS_FEATURE_8AM,
+                    '9': STOPS_FEATURE_9AM,
+                    '10': STOPS_FEATURE_10AM,
+                    '11': STOPS_FEATURE_11AM,
+                    '12': STOPS_FEATURE_12PM,
+                    '13': STOPS_FEATURE_1PM,
+                    '14': STOPS_FEATURE_2PM,
+                    '15': STOPS_FEATURE_3PM,
+                    '16': STOPS_FEATURE_4PM,
+                    '17': STOPS_FEATURE_5PM,
+                    '18': STOPS_FEATURE_6PM,
+                    '19': STOPS_FEATURE_7PM,
+                    '20': STOPS_FEATURE_8PM,
+                }
+
+                # Get the route layer based on the time
+                stops_feature = STOPS_FEATURES.get(time, STOPS_FEATURE_NONE)
+                print(f"Using stops feature: {stops_feature}")
+
+                # Assign route feature
+                print("Assigning route feature...")
+                ROUTE_FEATURES = {
+                    '0': ROUTE_FEATURE_NONE,
+                    '6': ROUTE_FEATURE_6AM,
+                    '7': ROUTE_FEATURE_7AM,
+                    '8': ROUTE_FEATURE_8AM,
+                    '9': ROUTE_FEATURE_9AM,
+                    '10': ROUTE_FEATURE_10AM,
+                    '11': ROUTE_FEATURE_11AM,
+                    '12': ROUTE_FEATURE_12PM,
+                    '13': ROUTE_FEATURE_1PM,
+                    '14': ROUTE_FEATURE_2PM,
+                    '15': ROUTE_FEATURE_3PM,
+                    '16': ROUTE_FEATURE_4PM,
+                    '17': ROUTE_FEATURE_5PM,
+                    '18': ROUTE_FEATURE_6PM,
+                    '19': ROUTE_FEATURE_7PM,
+                    '20': ROUTE_FEATURE_8PM,
+                }
+
+                # Get the route feature based on the time
+                route_feature = ROUTE_FEATURES.get(time, ROUTE_FEATURE_NONE)
+                print(f"Using route feature: {route_feature}")
+
+                # Assign route layer
+                print("Assigning route feature...")
+                ROUTE_LAYERS = {
+                    '0': ROUTE_LAYER_NONE,
+                    '6': ROUTE_LAYER_6AM,
+                    '7': ROUTE_LAYER_7AM,
+                    '8': ROUTE_LAYER_8AM,
+                    '9': ROUTE_LAYER_9AM,
+                    '10': ROUTE_LAYER_10AM,
+                    '11': ROUTE_LAYER_11AM,
+                    '12': ROUTE_LAYER_12PM,
+                    '13': ROUTE_LAYER_1PM,
+                    '14': ROUTE_LAYER_2PM,
+                    '15': ROUTE_LAYER_3PM,
+                    '16': ROUTE_LAYER_4PM,
+                    '17': ROUTE_LAYER_5PM,
+                    '18': ROUTE_LAYER_6PM,
+                    '19': ROUTE_LAYER_7PM,
+                    '20': ROUTE_LAYER_8PM,
+                }
+
+                # Get the route layer based on the time
+                route_layer = ROUTE_LAYERS.get(time, ROUTE_LAYER_NONE)
+                print(f"Using route layer: {route_layer}")
+
+                # Generate selected route
+                route = generateRoute(stops_feature, route_feature, route_layer, ROUTE_OUTPUT, SHAPEFILE_OUTPUT, GEOJSON_OUTPUT, GEOJSON_CONVERTED)
+
+                # Generate direct route
+                if(time != '0'):
+                    direct_route = generateRoute(STOPS_FEATURE_NONE, ROUTE_FEATURE_NONE, ROUTE_LAYER_NONE, DIRECT_ROUTE_OUTPUT, DIRECT_SHAPEFILE_OUTPUT, DIRECT_GEOJSON_OUTPUT, DIRECT_GEOJSON_CONVERTED)
+                else: 
+                    direct_route = route
+
+                result_queue.put({
+                    "route": route, 
+                    "direct_route": direct_route
+                })
+                
+            except Exception as e:
+                print(f"Arcpy error: {e}")
+                result_queue.put({"error": f"Arcpy error: {str(e)}"})
+
+            finally:
+                # Release Network Analyst extension
+                arcpy.CheckInExtension("Network")
+                print("Checked in Network Analyst extension.")
+
+        except Exception as e:
+            print(f"Flask error: {e}")
+            result_queue.put({"error": str(e)})
+    
 @app.route('/route', methods=['POST'])
 def solve_route():
 
-    try:
-        data = request.get_json()
-        print(f"Received data: {data}")
+        task = request.get_json()
+        task_queue.put(task)
 
-        if not data or 'start' not in data or 'end' not in data:
-            print("Invalid input detected.")
-            return jsonify({"error": "Invalid input. Provide 'start' and 'end' coordinates."}), 400
-        
-        start = data['start']
-        startLat = start['lat']
-        startLng = start['lng']
-        end = data['end']
-        endLat = end['lat']
-        endLng = end['lng']
-        print(f"Start coordinates: ({startLat}, {startLng}), End coordinates: ({endLat}, {endLng})")
+        result = result_queue.get()
 
-        try:
-            # Network Analyst extension
-            print("Checking out Network Analyst extension...")
-            arcpy.CheckOutExtension("Network")
-
-            # Create or overwrite Stops feature class
-            if arcpy.Exists(STOPS_FEATURE_CLASS):
-                print("Deleting existing Stops feature class...")
-                arcpy.management.Delete(STOPS_FEATURE_CLASS)
-            print("Creating Stops feature class...")
-            arcpy.management.CreateFeatureclass(GDB_PATH, "Stops", "POINT", spatial_reference=arcpy.SpatialReference(4326))
-            arcpy.management.AddField(STOPS_FEATURE_CLASS, "Name", "TEXT")
-
-            # Insert start and end points
-            print("Inserting start and end points into Stops...")
-            with arcpy.da.InsertCursor(STOPS_FEATURE_CLASS, ["SHAPE@XY", "Name"]) as cursor:
-                cursor.insertRow([(startLng, startLat), "Start"])
-                cursor.insertRow([(endLng, endLat), "End"])
-
-            # Assign stops feature
-            print("Assigning stops feature...")
-            STOPS_FEATURES = {
-                '0': STOPS_FEATURE_NONE,
-                '6': STOPS_FEATURE_6AM,
-                '7': STOPS_FEATURE_7AM,
-                '8': STOPS_FEATURE_8AM,
-                '9': STOPS_FEATURE_9AM,
-                '10': STOPS_FEATURE_10AM,
-                '11': STOPS_FEATURE_11AM,
-                '12': STOPS_FEATURE_12PM,
-                '13': STOPS_FEATURE_1PM,
-                '14': STOPS_FEATURE_2PM,
-                '15': STOPS_FEATURE_3PM,
-                '16': STOPS_FEATURE_4PM,
-                '17': STOPS_FEATURE_5PM,
-                '18': STOPS_FEATURE_6PM,
-                '19': STOPS_FEATURE_7PM,
-                '20': STOPS_FEATURE_8PM,
-            }
-
-            # Get the route layer based on the time
-            stops_feature = STOPS_FEATURES.get(data['time'], STOPS_FEATURE_NONE)
-            print(f"Using stops feature: {stops_feature}")
-
-            # Assign route feature
-            print("Assigning route feature...")
-            ROUTE_FEATURES = {
-                '0': ROUTE_FEATURE_NONE,
-                '6': ROUTE_FEATURE_6AM,
-                '7': ROUTE_FEATURE_7AM,
-                '8': ROUTE_FEATURE_8AM,
-                '9': ROUTE_FEATURE_9AM,
-                '10': ROUTE_FEATURE_10AM,
-                '11': ROUTE_FEATURE_11AM,
-                '12': ROUTE_FEATURE_12PM,
-                '13': ROUTE_FEATURE_1PM,
-                '14': ROUTE_FEATURE_2PM,
-                '15': ROUTE_FEATURE_3PM,
-                '16': ROUTE_FEATURE_4PM,
-                '17': ROUTE_FEATURE_5PM,
-                '18': ROUTE_FEATURE_6PM,
-                '19': ROUTE_FEATURE_7PM,
-                '20': ROUTE_FEATURE_8PM,
-            }
-
-            # Get the route feature based on the time
-            route_feature = ROUTE_FEATURES.get(data['time'], ROUTE_FEATURE_NONE)
-            print(f"Using route feature: {route_feature}")
-
-            # Assign route layer
-            print("Assigning route feature...")
-            ROUTE_LAYERS = {
-                '0': ROUTE_LAYER_NONE,
-                '6': ROUTE_LAYER_6AM,
-                '7': ROUTE_LAYER_7AM,
-                '8': ROUTE_LAYER_8AM,
-                '9': ROUTE_LAYER_9AM,
-                '10': ROUTE_LAYER_10AM,
-                '11': ROUTE_LAYER_11AM,
-                '12': ROUTE_LAYER_12PM,
-                '13': ROUTE_LAYER_1PM,
-                '14': ROUTE_LAYER_2PM,
-                '15': ROUTE_LAYER_3PM,
-                '16': ROUTE_LAYER_4PM,
-                '17': ROUTE_LAYER_5PM,
-                '18': ROUTE_LAYER_6PM,
-                '19': ROUTE_LAYER_7PM,
-                '20': ROUTE_LAYER_8PM,
-            }
-
-            # Get the route layer based on the time
-            route_layer = ROUTE_LAYERS.get(data['time'], ROUTE_LAYER_NONE)
-            print(f"Using route layer: {route_layer}")
-
-            # Generate selected route
-            route = generateRoute(stops_feature, route_feature, route_layer, ROUTE_OUTPUT, SHAPEFILE_OUTPUT, GEOJSON_OUTPUT, GEOJSON_CONVERTED)
-
-            # Generate direct route
-            if(data['time'] != '0'):
-                direct_route = generateRoute(STOPS_FEATURE_NONE, ROUTE_FEATURE_NONE, ROUTE_LAYER_NONE, DIRECT_ROUTE_OUTPUT, DIRECT_SHAPEFILE_OUTPUT, DIRECT_GEOJSON_OUTPUT, DIRECT_GEOJSON_CONVERTED)
-            else: 
-                direct_route = route
-
-            return jsonify({
-                "route": route, 
-                "direct_route": direct_route
-            })
-            
-        except Exception as e:
-            print(f"Arcpy error: {e}")
-            return jsonify({"error": f"Arcpy error: {str(e)}"}), 500
-
-        finally:
-            # Release Network Analyst extension
-            arcpy.CheckInExtension("Network")
-            print("Checked in Network Analyst extension.")
-
-    except Exception as e:
-        print(f"Flask error: {e}")
-        return jsonify({"error": str(e)}), 500
+        if "error" in result:
+            return jsonify(result), 500
+        return jsonify(result)
     
 def generateRoute(stops_feature, route_feature, route_layer, output, shapefileOutput, geojsonOutput, geojsonConvertedOutput):
 
@@ -292,4 +311,10 @@ def generateRoute(stops_feature, route_feature, route_layer, output, shapefileOu
         
 # Run the Flask app
 if __name__ == '__main__':
-    app.run(debug=True)
+
+    from multiprocessing import freeze_support
+    freeze_support()
+
+    Process(target=worker, args=(task_queue, result_queue), daemon=True).start()
+
+    app.run(port=5000)
