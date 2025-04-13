@@ -1,12 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./globals.css";
 
-const AddressSearch = ({ className, setUserCoordinates, setSearching, showNotification}) => {
+const AddressSearch = ({ className, clear, setUserCoordinates, setSearching, showNotification}) => {
 
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [debounceTimer, setDebounceTimer] = useState(null);
+
+  useEffect(() => {
+    setQuery('');
+    setSuggestions([]);
+    if (debounceTimer) clearTimeout(debounceTimer);
+  }, [clear]);
 
   // Fetch autocomplete suggestions
   const fetchSuggestions = (address) => {
@@ -42,19 +48,19 @@ const AddressSearch = ({ className, setUserCoordinates, setSearching, showNotifi
     setQuery(value);
 
     // Wait for atleast 3 characters to be entered, unlikely to find a match with less
-    // Also wait for 2.5 seconds after the last input change to not flood the API with requests
+    // Also wait for 0.5 seconds after the last input change to not flood the API with requests - hope this is long enough
     if (value.length > 2) {
-      // Clear the previous timeout if user types again before 2.5 seconds
+      // Clear the previous timeout if user types again before 0.5 seconds
       if (debounceTimer) {
         clearTimeout(debounceTimer);
       }
       setSearching(true);
 
-      // Set a new timeout to fetch suggestions after 2.5 seconds after the last input change
+      // Set a new timeout to fetch suggestions after 0.5 seconds after the last input change
       const timer = setTimeout(() => {
         fetchSuggestions(value);
         setSearching(false);
-      }, 2500);
+      }, 500);
 
       setDebounceTimer(timer);
     } else {
@@ -82,12 +88,13 @@ const AddressSearch = ({ className, setUserCoordinates, setSearching, showNotifi
         type='text'
         value={query}
         onChange={handleInputChange}
-        placeholder={`search for ${className === "origin-input" ? "origin" : "dest"} address`}
+        placeholder={`search for ${className === "start-input" ? "start" : "dest"} address`}
+        onFocus={(e) => e.target.select()}
       />
 
       {/* Autocomplete dropdown */}
       {suggestions.length > 0 && (
-        <ul className={className === "origin-input" ? "origin-ul" : "destination-ul"}>
+        <ul className={className === "start-input" ? "start-ul" : "end-ul"}>
           {suggestions.map((item) => (
             <li key={item.place_id} onClick={() => handleSelect(item)} style={{ cursor: "pointer", padding: "5px" }}>
 
