@@ -463,7 +463,7 @@ button {
   top: 5vh;
   left: 10vw;
   width: 80vw;
-  height: 90vh;
+  height: 80vh;
 
   background-color: rgba(0, 0, 0, 0.9);
   color: white;
@@ -502,5 +502,5 @@ button {
   text-align: center;
   padding: 10px;
   overflow-y: auto;
-  height: 75vh;
+  height: 65vh;
 }
