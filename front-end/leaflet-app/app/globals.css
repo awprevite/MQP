@@ -1,6 +1,13 @@
 :root {
-  --blue: #0A84FF; /* Define a CSS variable */
+  --blue: #0A84FF;
   --red: #EA4335;
+  --grey: #8d8d8d;
+}
+.blue{
+  color: var(--blue);
+}
+.red{
+  color: var(--red);
 }
 
 body, html {
@@ -12,7 +19,7 @@ body, html {
   font-size: 16px;
 }
 
-/* Set all fonts to 16px to avoid zooming */
+/* Set all fonts to 16px to avoid zooming on focus/active */
 input, textarea, select, button, label, ul, li {
   font-family: Arial;
   font-size: 16px;
@@ -25,6 +32,11 @@ ul {
   overflow: hidden;
 }
 
+select {
+  border-radius: 5px;
+  border: 3px solid transparent;
+}
+
 label {
   display: flex;
   height: 100%;
@@ -32,8 +44,7 @@ label {
   color: white;
   background-color: black;
   border-radius: 5px;
-  border-radius: 5px;
-  border: 2px solid transparent;
+  border: 3px solid transparent;
   padding: 10px 20px;
   box-sizing: border-box;
   justify-content: center;
@@ -46,11 +57,10 @@ input {
   background-color: black;
   box-sizing: border-box;
   border-radius: 5px;
-  border: 2px solid transparent;
+  border: 3px solid transparent;
   padding: 0px 3px;
 }
 input:focus {
-  border: none;
   outline: none;
 }
 
@@ -59,21 +69,10 @@ button {
   padding: 10px 20px;
   background-color: black;
   color: white;
-  border: 2px solid transparent;
+  border: 3px solid transparent;
   border-radius: 5px;
   box-sizing: border-box;
   cursor: pointer;
-}
-button:active {
-  background-color: green;
-}
-
-.vertical-container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  justify-content: space-evenly;
 }
 
 .map-container {
@@ -99,11 +98,11 @@ button:active {
 
 .start-input {
   position: absolute;
-  top: 10px;
-  left: 10px;
+  top: 0.5vh;
+  left: 2vw;
   z-index: 1000;
   height: 6vh;
-  width: 39vw;
+  width: 80vw;
   color: white;
   background-color: black;
   border-radius: 5px;
@@ -125,11 +124,11 @@ button:active {
 
 .end-input {
   position: absolute;
-  top: 10px;
-  right: 55px;
+  top: 7vh;
+  left: 2vw;
   z-index: 1000;
   height: 6vh;
-  width: 39vw;
+  width: 80vw;
   color: white;
   background-color: black;
   border-radius: 5px;
@@ -150,11 +149,17 @@ button:active {
 }
 
 /* Styling for selected and regular button states */
-.selected {
-  border-color: green;
+.selected-start {
+  background-color: var(--blue);
+  border-color: var(--blue);
+}
+.selected-end {
+  background-color: var(--red);
+  border-color: var(--red);
 }
 .regular {
-  border-color: none;
+  background-color: black;
+  border-color: var(--grey);
 }
 
 .outer-circle {
@@ -170,117 +175,152 @@ button:active {
 
 .calculate-button {
   position: absolute;
-  bottom: 55px;
-  right: 10px;
+  top: 0.5vh;
+  right: 2vw;
   z-index: 1000;
-  width: 46vw;
-  height: 6vh;
+  width: 15vw;
+  height: 19vh;
   padding: 0px 0px;
+  border-color: var(--grey);
 }
 
 .locate-button {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 13.5vh;
+  left: 68vw;
   z-index: 1000;
-  width: 40px;
+  width: 14vw;
   height: 6vh;
   padding: 0px 0px;
   display: flex;
   justify-content: center;
   align-items: center;
+  border-color: var(--grey);
 }
 
 .dark-mode-button {
   position: absolute;
-  top: 120px;
-  right: 10px;
+  top: 13.5vh;
+  left: 53vw;
   z-index: 1000;
-  width: 40px;
+  width: 14vw;
   height: 6vh;
   padding: 0px 0px;
   display: flex;
   justify-content: center;
   align-items: center;
+  border-color: var(--grey);
 }
 
+.set-label {
+  position: absolute;
+  top: 20vh;
+  left: 2vw;
+  z-index: 1000;
+  height: 7.5vh;
+  width: 65vw;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border-color: var(--grey);
+  display: inline-block;
+  white-space: normal;
+  word-break: break-word;
+}
 .set-start-button {
   position: absolute;
-  bottom: 112px;
-  left: 10px;
+  top: 20vh;
+  right: 2vw;
   z-index: 1000;
-  height: 6vh;
-  width: 46vw;
+  height: 3.5vh;
+  width: 30vw;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 0px 0px;
 }
 .set-end-button {
   position: absolute;
-  bottom: 112px;
-  right: 10px;
+  top: 24vh;
+  right: 2vw;
   z-index: 1000;
-  height: 6vh;
-  width: 46vw;
+  height: 3.5vh;
+  width: 30vw;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 0px 0px;
 }
 
 .time-dropdown {
   position: absolute;
-  bottom: 55px;
-  left: 10px;
+  top: 13.5vh;
+  left: 2vw;
   z-index: 1000;
   height: 6vh;
-  width: 46vw;
+  width: 50vw;
   color: white;
   background-color: black;
   border-radius: 5px;
   padding: 0px 0px;
   text-align: center;
   text-align-last: center;
+  border-color: var(--grey);
 }
 .time-dropdown:active,
 .time-dropdown:focus {
   outline: none;
 }
 
-.cool-distance {
+.cool-info {
   position: absolute;
-  left: 10px;
-  bottom: 16px;
+  left: 2vw;
+  bottom: 0.5vh;
   z-index: 1000;
-  height: 4vh;
-  width: 46vw;
+  height: 8vh;
+  width: 47vw;
   border-color: var(--blue);
 }
-.direct-distance {
+.direct-info {
   position: absolute;
-  right: 10px;
-  bottom: 16px;
+  right: 2vw;
+  bottom: 0.5vh;
   z-index: 1000;
-  height: 4vh;
-  width: 46vw;
+  height: 8vh;
+  width: 47vw;
   border-color: var(--red);
 }
-.cool-time {
+
+.show-cool-checkbox {
   position: absolute;
-  left: 10px;
-  bottom: 0px;
+  bottom: 10vh;
+  left: 2vw;
   z-index: 1000;
-  height: 4vh;
-  width: 46vw;
-  border-color: var(--blue);
+  height: 8vh;
+  width: 47vw;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 0px 0px;
 }
-.direct-time {
+
+.show-direct-checkbox {
   position: absolute;
-  right: 10px;
-  bottom: 0px;
+  bottom: 10vh;
+  right: 2vw;
   z-index: 1000;
-  height: 4vh;
-  width: 46vw;
-  border-color: var(--red);
+  height: 8vh;
+  width: 47vw;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 0px 0px;
 }
 
 .notification {
   display: flex;
   position: fixed;
-  top: 200px;
+  top: 30vh;
   left: 50%;
   transform: translateX(-50%);
   background-color: black;

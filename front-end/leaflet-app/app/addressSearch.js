@@ -2,11 +2,16 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./globals.css";
 
-const AddressSearch = ({ className, clear, setUserCoordinates, setSearching, showNotification}) => {
+const AddressSearch = ({ className, clear, setUserCoordinates, setSearching, showNotification, address}) => {
 
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [debounceTimer, setDebounceTimer] = useState(null);
+
+  useEffect(() => {
+    setQuery(address);
+  }, [address]);
+    // If the address prop is not empty, set the query to the address
 
   useEffect(() => {
     setQuery('');
@@ -88,7 +93,7 @@ const AddressSearch = ({ className, clear, setUserCoordinates, setSearching, sho
         type='text'
         value={query}
         onChange={handleInputChange}
-        placeholder={`search for ${className === "start-input" ? "start" : "dest"} address`}
+        placeholder={`search for ${className === "start-input" ? "start" : "end"} address`}
         onFocus={(e) => e.target.select()}
       />
 
