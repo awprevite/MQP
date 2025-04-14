@@ -1,7 +1,7 @@
 :root {
   --blue: #0A84FF;
   --red: #EA4335;
-  --grey: #8d8d8d;
+  --grey: #626262;
 }
 .blue{
   color: var(--blue);
@@ -14,7 +14,6 @@ body, html {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
   font-family: Arial;
   font-size: 16px;
 }
@@ -23,13 +22,14 @@ body, html {
 input, textarea, select, button, label, ul, li {
   font-family: Arial;
   font-size: 16px;
+  box-sizing: border-box;
 }
 
 ul {
   color: white;
   background-color: black;
   padding: 5px;
-  overflow: hidden;
+  border: 3px solid transparent;
 }
 
 select {
@@ -45,7 +45,7 @@ label {
   background-color: black;
   border-radius: 5px;
   border: 3px solid transparent;
-  padding: 10px 20px;
+  padding: 5px 10px;
   box-sizing: border-box;
   justify-content: center;
   align-items: center;
@@ -111,15 +111,25 @@ button {
 
 .start-ul {
   position: absolute;
-  top: 55px;
-  left: 10px;
-  z-index: 1000;
-  height: 30vh;
-  width: 38vw;
+  top: 7vh;
+  left: 2vw;
+  z-index: 1100;
+  max-height: 90vh;
+  overflow-y: auto;
+  width: 80vw;
   color: white;
   background-color: black;
   border-radius: 5px;
-  border: none;
+  border-color: var(--blue);
+  padding: 0px 0px;
+  margin: 0px 0px;
+}
+
+.start-ul li {
+  border-bottom: 3px solid var(--grey);
+  scroll-behavior: smooth;
+  padding: 0px 0px;
+  margin: 0px 0px;
 }
 
 .end-input {
@@ -137,15 +147,24 @@ button {
 
 .end-ul {
   position: absolute;
-  top: 55px;
-  right: 55px;
-  z-index: 1000;
-  height: 30vh;
-  width: 38vw;
+  top: 13.5vh;
+  left: 2vw;
+  z-index: 1100;
+  max-height: 90vh;
+  overflow-y: auto;
+  width: 80vw;
   color: white;
   background-color: black;
   border-radius: 5px;
-  border: none;
+  border-color: var(--red);
+  padding: 0px 0px;
+  margin: 0px 0px;
+}
+.end-ul li {
+  border-bottom: 3px solid var(--grey);
+  scroll-behavior: smooth;
+  padding: 0px 0px;
+  margin: 0px 0px;
 }
 
 /* Styling for selected and regular button states */
@@ -212,6 +231,27 @@ button {
   border-color: var(--grey);
 }
 
+.loading-label {
+  position: absolute;
+  bottom: 15vh;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 8vh;
+  width: 96vw;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  border-color: var(--grey);
+  display: inline-block;
+  white-space: normal;
+  word-break: break-word;
+  z-index: 1001;
+  color: var(--grey);
+  background-color: transparent;
+  border: none;
+  font-size: 28px;
+}
+
 .set-label {
   position: absolute;
   top: 20vh;
@@ -275,46 +315,48 @@ button {
 .cool-info {
   position: absolute;
   left: 2vw;
-  bottom: 0.5vh;
+  bottom: 2.5vh;
   z-index: 1000;
   height: 8vh;
-  width: 47vw;
+  width: 39.5vw;
   border-color: var(--blue);
 }
 .direct-info {
   position: absolute;
-  right: 2vw;
-  bottom: 0.5vh;
+  left: 50.5vw;
+  bottom: 2.5vh;
   z-index: 1000;
   height: 8vh;
-  width: 47vw;
+  width: 39.5vw;
   border-color: var(--red);
 }
 
 .show-cool-checkbox {
   position: absolute;
-  bottom: 10vh;
-  left: 2vw;
+  bottom: 2.5vh;
+  left: 42.5vw;
   z-index: 1000;
   height: 8vh;
-  width: 47vw;
+  width: 7vw;
   justify-content: center;
   align-items: center;
   text-align: center;
   padding: 0px 0px;
+  border-color: var(--blue);
 }
 
 .show-direct-checkbox {
   position: absolute;
-  bottom: 10vh;
+  bottom: 2.5vh;
   right: 2vw;
   z-index: 1000;
   height: 8vh;
-  width: 47vw;
+  width: 7vw;
   justify-content: center;
   align-items: center;
   text-align: center;
   padding: 0px 0px;
+  border-color: var(--red);
 }
 
 .notification {
@@ -352,36 +394,31 @@ button {
 /* Loading/searching/locating animations */
 .searcher {
   position: absolute;
-  top: 170px;
-  right: 10px;
+  top: 30vh;
+  right: 2vw;
   z-index: 1001;
-  height: 30px;
-  aspect-ratio: 2.5;
-  --_g: no-repeat radial-gradient(farthest-side, #000 90%, #0000);
-  background: var(--_g), var(--_g);
-  background-size: 20% 50%;
-  animation: l44 1s infinite linear alternate;
+  width: 8vw;
+  aspect-ratio: 1.154;
+  --_g: no-repeat radial-gradient(farthest-side, var(--grey) 90%,#0000);
+  background: 
+    var(--_g) 50%  0,
+    var(--_g) 0    100%,
+    var(--_g) 100% 100%;
+  background-size: 35% calc(35%*1.154);
+  animation: l16 1s infinite;
 }
-@keyframes l44 {
-  0%, 5%    {background-position: calc(2*100%/3) 50%, calc(3*100%/3) 50%}
-  12.5%     {background-position: calc(2*100%/3) 0  , calc(3*100%/3) 50%}
-  25%       {background-position: calc(2*100%/3) 0  , calc(3*100%/3) 0  }
-  37.5%     {background-position: calc(2*100%/3) 100%,calc(3*100%/3) 0  }
-  50%       {background-position: calc(2*100%/3) 100%,calc(3*100%/3) 100%}
-  62.5%     {background-position: calc(2*100%/3) 50%, calc(3*100%/3) 100%}
-  75%       {background-position: calc(2*100%/3) 50%, calc(3*100%/3) 50%}
-  87.5%     {background-position: calc(2*100%/3) 50%, calc(3*100%/3) 100%}
-  95%,100%  {background-position: calc(2*100%/3) 50%, calc(3*100%/3) 50%}
+@keyframes l16{ 
+    50%,100% {background-position: 100% 100%,50% 0,0 100%} 
 }
 
 .locator {
   position: absolute;
-  top: 75px;
-  right: 13px;
+  bottom: 11vh;
+  right: 2vw;
   z-index: 1001;
-  width: 32px;
+  width: 8vw;
   aspect-ratio: 1;
-  --_g: no-repeat radial-gradient(farthest-side,#000 90%,#0000);
+  --_g: no-repeat radial-gradient(farthest-side, var(--grey) 90%,#0000);
   background: var(--_g), var(--_g), var(--_g), var(--_g);
   background-size: 40% 40%;
   animation: l46 1s infinite;
@@ -396,12 +433,12 @@ button {
 
 .loader {
   position: absolute;
-  bottom: 170px;
-  left: 10px;
+  bottom: 11vh;
+  left: 2vw;
   z-index: 1001;
-  height: 15px;
+  width: 16vw;
   aspect-ratio: 5;
-  --_g:no-repeat radial-gradient(farthest-side,#000 94%,#0000);
+  --_g:no-repeat radial-gradient(farthest-side, var(--grey) 94%,#0000);
   background: var(--_g),var(--_g),var(--_g),var(--_g);
   background-size: 20% 100%;
   animation:
@@ -419,4 +456,51 @@ button {
 @keyframes l40-2 {
   0%,49.99% {transform: scale( 1)}
   50%,100%  {transform: scale(-1)}
+}
+
+.welcome {
+  position: fixed;
+  top: 5vh;
+  left: 10vw;
+  width: 80vw;
+  height: 90vh;
+
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  border: 3px solid var(--grey);
+}
+.welcome-button {
+  width: 60vw;
+  height: 6vh;
+  padding: 0px 0px;
+  margin: 3vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background-color: black;
+  border-color: var(--red);
+}
+.welcome-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
+}
+.welcome-content {
+  position: relative;
+  text-align: center;
+  padding: 10px;
+  overflow-y: auto;
+  height: 75vh;
 }

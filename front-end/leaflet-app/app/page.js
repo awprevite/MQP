@@ -9,6 +9,8 @@ import "leaflet/dist/leaflet.css";
 import "./globals.css"
 import AddressSearch from "./addressSearch";
 import { boundaryCoordinates, pointInPolygon } from "./boundary";
+import Loading from "./loading";
+import Welcome from "./welcome";
 
 // Dynamically import react-leaflet components, disabling SSR, avoid window is not defined issues
 const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), { ssr: false });
@@ -25,11 +27,21 @@ export default function Home() {
 
   // Notification state and logic
   const [notification, setNotification] = useState(null);
-  function showNotification(message) {
-    setNotification(message);
+  const notificationTimeout = useRef(null);
 
-    setTimeout(() => {
+  const notificationCounter = useRef(0);
+
+  function showNotification(message) {
+    setNotification(message + " (" + notificationCounter.current + ")");
+    notificationCounter.current ++;
+
+    if (notificationTimeout.current) {
+      clearTimeout(notificationTimeout.current);
+    }
+
+    notificationTimeout.current = setTimeout(() => {
       setNotification(null);
+      notificationTimeout.current = null;
     }, 3000);
   }
 
@@ -45,6 +57,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [locating, setLocating] = useState(false);
+
+  const [welcomeOpen, setWelcomeOpen] = useState(true);
 
   // Route and route distance and time states
   const [geojsonData, setGeojsonData] = useState(null);
@@ -97,7 +111,7 @@ export default function Home() {
     fillOpacity: 0.6
   };
   const boundaryStyle = {
-    color: "black",
+    color: darkMode ? "#8d8d8d" : "#000000",
     weight: 5,
     opacity: 1,
     fillOpacity: 1
@@ -157,9 +171,9 @@ export default function Home() {
     axios.get(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
       .then((response) => {
         if(currentMarker === START_MARKER){
-          setStartAddress(response.data.display_name);
+          setStartAddress(filterName(response.data));
         }else{
-          setEndAddress(response.data.display_name);
+          setEndAddress(filterName(response.data));
         }
       })
       .catch((error) => {
@@ -272,10 +286,35 @@ export default function Home() {
     setShowDirect(!showDirect);
   }
 
+  const filterName = (item) => {
+    let address = "";
+    if(item.address.building){
+      address += item.address.building + ", ";
+    }
+    if(item.address.amenity){
+      address += item.address.amenity + ", ";
+    }
+    if(item.address.house_number){
+      address += item.address.house_number + " ";
+    }
+    if(item.address.road){
+      address += item.address.road + ", ";
+    }
+    if(item.address.city){
+      address += item.address.city + ", ";
+    }
+    if(item.address.postcode){
+      address += item.address.postcode;
+    }
+
+    return address.trim();
+  }
+
   return (
     <>
+      {welcomeOpen && <Welcome setWelcomeOpen={setWelcomeOpen} />}
       <div className='map-container'>
-        <label className='set-label'>Use addresses OR tap the map to set the <span className={currentMarker == START_MARKER ? 'blue':'red'}> {currentMarker == START_MARKER ? 'start':'end'}</span> point</label>
+        <label className='set-label'>Use addresses OR tap the map to set <span className={currentMarker == START_MARKER ? 'blue':'red'}> {currentMarker == START_MARKER ? 'start':'end'}</span></label>
         <button className={`set-start-button ${toggleMarkerStart()}`} onClick={() => toggleMarker("start")}>Start</button>
         <button className={`set-end-button ${toggleMarkerEnd()}`} onClick={() => toggleMarker("end")}>End</button>
         <button className='calculate-button' onClick={sendCoordinatesToAPI} disabled={loading}>Go</button>
@@ -303,8 +342,8 @@ export default function Home() {
             <option value="20">8 pm or later</option>
           </select>
 
-        <AddressSearch className='start-input' clear={startAddressClear} setUserCoordinates={setStartCoordinates} setSearching={setSearching} showNotification={showNotification} address={startAddress}/>
-        <AddressSearch className='end-input' clear={endAddressClear} setUserCoordinates={setEndCoordinates} setSearching={setSearching} showNotification={showNotification} address={endAddress}/>
+        <AddressSearch className='start-input' clear={startAddressClear} setUserCoordinates={setStartCoordinates} setSearching={setSearching} showNotification={showNotification} address={startAddress} filterName={filterName}/>
+        <AddressSearch className='end-input' clear={endAddressClear} setUserCoordinates={setEndCoordinates} setSearching={setSearching} showNotification={showNotification} address={endAddress} filterName={filterName}/>
 
         <MapContainer center={[42.2626, -71.8079]} zoom={13} style={{ height: "100%", width: "100%"} } zoomControl={false}>
 
@@ -319,13 +358,21 @@ export default function Home() {
 
         </MapContainer>
 
+        {(loading || searching || locating) && 
+          <Loading text={
+            (loading && "calculate") ||
+            (locating && "locate") ||
+            (searching && "search") ||
+            ""
+            } 
+          />}
         <label className='direct-info'>{directShapeLength.current} Miles<br />{directTime.current} Minutes</label>
         <label className='cool-info'>{coolShapeLength.current} Miles<br />{coolTime.current} Minutes</label>
       </div>
       {loading && <div className='loader'></div>}
       {searching && <div className='searcher'></div>}
       {locating && <div className='locator'></div>}
-      {notification && <div className="notification">{notification}</div>}
+      {notification && (<div key={notification} className="notification">{notification.split("(")[0].trim()}</div>)}
     </>
   );
 }

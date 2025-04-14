@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./globals.css";
 
-const AddressSearch = ({ className, clear, setUserCoordinates, setSearching, showNotification, address}) => {
+const AddressSearch = ({ className, clear, setUserCoordinates, setSearching, showNotification, address, filterName}) => {
 
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -65,7 +65,7 @@ const AddressSearch = ({ className, clear, setUserCoordinates, setSearching, sho
       const timer = setTimeout(() => {
         fetchSuggestions(value);
         setSearching(false);
-      }, 500);
+      }, 1000);
 
       setDebounceTimer(timer);
     } else {
@@ -75,19 +75,20 @@ const AddressSearch = ({ className, clear, setUserCoordinates, setSearching, sho
   };
 
   // Handle selecting an address from suggestions
-  const handleSelect = (address) => {
+  const handleSelect = (item) => {
 
     // Only take the first two parts of the address, the whole display name is very long
-    const parts = address.display_name.split(", ");
-    setQuery(`${parts[0]}, ${parts[1]}`); // Set input value to selected address
+    //const parts = address.display_name.split(", ");
+    //setQuery(`${parts[0]}, ${parts[1]}`); // Set input value to selected address
+    setQuery(filterName(item)); // Set input value to selected address
     setSuggestions([]); // Hide suggestions
 
     // Move map to selected address
-    setUserCoordinates({ lat: parseFloat(address.lat), lng: parseFloat(address.lon) });
+    setUserCoordinates({ lat: parseFloat(item.lat), lng: parseFloat(item.lon) });
   };
 
   return (
-    <div>
+    <div style={{ position: "relative" }}>
       <input
         className={className}
         type='text'
@@ -104,7 +105,8 @@ const AddressSearch = ({ className, clear, setUserCoordinates, setSearching, sho
             <li key={item.place_id} onClick={() => handleSelect(item)} style={{ cursor: "pointer", padding: "5px" }}>
 
               {/* Display only the first two parts of the address to allow for multiple suggestions to show up */}
-              {`${item.display_name.split(", ")[0]}, ${item.display_name.split(", ")[1]}`}
+              {`${filterName(item)}`}
+              {/*{`${item.display_name.split(", ")[0]}, ${item.display_name.split(", ")[1]}`}*/}
             </li>
           ))}
         </ul>
