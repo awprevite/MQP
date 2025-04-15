@@ -256,6 +256,9 @@ button:active {
 
 .hide-buttons-button {
   position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   top: 28vh;
   left: 40vw;
   z-index: 1000;

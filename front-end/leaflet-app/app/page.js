@@ -355,7 +355,7 @@ export default function Home() {
         
         <button className='show-cool-checkbox' onClick={toggleCool}>{showCool ? <SquareCheck size={18} /> : <Square size={18} />}</button>
         <button className='show-direct-checkbox' onClick={toggleDirect}>{showDirect ? <SquareCheck size={18} /> : <Square size={18} />}</button>
-        <button className={buttonsOpen ? 'hide-buttons-button' : 'hide-buttons-button hidden'} onClick={toggleButtonsOpen}><Minus size={24} /></button>
+        <button className={buttonsOpen ? 'hide-buttons-button' : 'hide-buttons-button hidden'} onClick={toggleButtonsOpen}><Minus size={80} /></button>
 
         <MapContainer center={[42.2626, -71.8079]} zoom={13} style={{ height: "100%", width: "100%"} } zoomControl={false}>
 
