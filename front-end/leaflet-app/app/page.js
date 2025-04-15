@@ -296,6 +296,9 @@ export default function Home() {
 
   const filterName = (item) => {
     let address = "";
+    if(item.address.leisure){
+      address += item.address.leisure + ", ";
+    }
     if(item.address.building){
       address += item.address.building + ", ";
     }
