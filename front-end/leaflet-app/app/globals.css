@@ -73,18 +73,20 @@ button {
   border-radius: 5px;
   box-sizing: border-box;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent; /* removes blue flash on mobile Safari */
+}
+button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+button:active {
+  outline: none;
+  box-shadow: none;
 }
 
 .map-container {
   height: 100%;
-}
-
-.button-container {
-  height: 30%;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  justify-content: space-evenly;
 }
 
 .distance-container {
@@ -250,6 +252,21 @@ button {
   background-color: transparent;
   border: none;
   font-size: 28px;
+}
+
+.hide-buttons-button {
+  position: absolute;
+  top: 28vh;
+  left: 40vw;
+  z-index: 1000;
+  height: 4vh;
+  width: 20vw;
+  padding: 0px 0px;
+  background: transparent;
+  color: var(--grey);
+}
+.hidden {
+  top: 0.5vh;
 }
 
 .set-label {

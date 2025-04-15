@@ -27,6 +27,9 @@ const Welcome = ({setWelcomeOpen}) => {
           <p>
             <span className="red">Red</span> corresponds to the direct route and end point.
           </p>
+          <p>
+            Press the small bar beneath the top menu to hide the menu, then press it again to reveal it.
+          </p>
 
           <h2>Disclaimer</h2>
           <p>

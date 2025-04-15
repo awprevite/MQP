@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useMapEvents } from "react-leaflet";
-import { Navigation, Moon, Square, SquareCheck } from "lucide-react";
+import { Navigation, Moon, Square, SquareCheck, Minus } from "lucide-react";
 import dynamic from "next/dynamic";
 import axios from "axios";
 import "leaflet/dist/leaflet.css";
@@ -59,6 +59,10 @@ export default function Home() {
   const [locating, setLocating] = useState(false);
 
   const [welcomeOpen, setWelcomeOpen] = useState(true);
+  const [buttonsOpen, setButtonsOpen] = useState(true);
+  const toggleButtonsOpen = () => {
+    setButtonsOpen(!buttonsOpen);
+  }
 
   // Route and route distance and time states
   const [geojsonData, setGeojsonData] = useState(null);
@@ -100,15 +104,15 @@ export default function Home() {
   // GeoJSON styles, routes and boundary
   const geojsonStyle = {
     color: "#0A84FF",
-    weight: 5,
+    weight: 4,
     opacity: 0.6,
     fillOpacity: 0.6
   };
   const directGeojsonStyle = {
     color: "#EA4335",
-    weight: 5,
-    opacity: 0.6,
-    fillOpacity: 0.6
+    weight: 4,
+    opacity: 0.8,
+    fillOpacity: 0.7
   };
   const boundaryStyle = {
     color: darkMode ? "#8d8d8d" : "#000000",
@@ -124,6 +128,7 @@ export default function Home() {
       hours = 6;
     } else if (hours > 20){
       hours = 20;
+      setDarkMode(true);
     }
     hours.toString();
     setTime(hours);
@@ -183,6 +188,9 @@ export default function Home() {
 
   // ClickHandler component to handle marker placement on map tap
   const ClickHandler = () => {
+    if(!buttonsOpen){
+      return null;
+    }
     useMapEvents({
       click: (e) => {
         const { lat, lng } = e.latlng;
@@ -314,36 +322,40 @@ export default function Home() {
     <>
       {welcomeOpen && <Welcome setWelcomeOpen={setWelcomeOpen} />}
       <div className='map-container'>
-        <label className='set-label'>Use addresses OR tap the map to set <span className={currentMarker == START_MARKER ? 'blue':'red'}> {currentMarker == START_MARKER ? 'start':'end'}</span></label>
-        <button className={`set-start-button ${toggleMarkerStart()}`} onClick={() => toggleMarker("start")}>Start</button>
-        <button className={`set-end-button ${toggleMarkerEnd()}`} onClick={() => toggleMarker("end")}>End</button>
-        <button className='calculate-button' onClick={sendCoordinatesToAPI} disabled={loading}>Go</button>
-        <button className='locate-button' onClick={findLocation} disabled={locating}><Navigation size={18} /></button>
-        <button className='dark-mode-button' onClick={toggleDarkMode}><Moon size={18} /></button>
+        {buttonsOpen &&
+          <>
+            <label className='set-label'>Use addresses OR tap the map to set <span className={currentMarker == START_MARKER ? 'blue':'red'}> {currentMarker == START_MARKER ? 'start':'end'}</span></label>
+            <button className={`set-start-button ${toggleMarkerStart()}`} onClick={() => toggleMarker("start")}>Start</button>
+            <button className={`set-end-button ${toggleMarkerEnd()}`} onClick={() => toggleMarker("end")}>End</button>
+            <button className='calculate-button' onClick={sendCoordinatesToAPI} disabled={loading}>Go</button>
+            <button className='locate-button' onClick={findLocation} disabled={locating}><Navigation size={18} /></button>
+            <button className='dark-mode-button' onClick={toggleDarkMode}><Moon size={18} /></button>
+            <AddressSearch className='start-input' clear={startAddressClear} setUserCoordinates={setStartCoordinates} setSearching={setSearching} showNotification={showNotification} address={startAddress} filterName={filterName}/>
+            <AddressSearch className='end-input' clear={endAddressClear} setUserCoordinates={setEndCoordinates} setSearching={setSearching} showNotification={showNotification} address={endAddress} filterName={filterName}/>
+            <select className='time-dropdown' value={time} onChange={(e) => setTime(e.target.value)}>
+              <option value="" disabled>Select a time</option>
+              <option value="6">6 am or earlier</option>
+              <option value="7">7 am </option>
+              <option value="8">8 am</option>
+              <option value="9">9 am</option>
+              <option value="10">10 am</option>
+              <option value="11">11 am</option>
+              <option value="12">12 pm</option>
+              <option value="13">1 pm</option>
+              <option value="14">2 pm</option>
+              <option value="15">3 pm</option> 
+              <option value="16">4 pm</option>
+              <option value="17">5 pm</option>
+              <option value="18">6 pm</option>
+              <option value="19">7 pm</option>
+              <option value="20">8 pm or later</option>
+            </select>
+          </>
+        }
+        
         <button className='show-cool-checkbox' onClick={toggleCool}>{showCool ? <SquareCheck size={18} /> : <Square size={18} />}</button>
         <button className='show-direct-checkbox' onClick={toggleDirect}>{showDirect ? <SquareCheck size={18} /> : <Square size={18} />}</button>
-
-        <select className='time-dropdown' value={time} onChange={(e) => setTime(e.target.value)}>
-            <option value="" disabled>Select a time</option>
-            <option value="6">6 am or earlier</option>
-            <option value="7">7 am </option>
-            <option value="8">8 am</option>
-            <option value="9">9 am</option>
-            <option value="10">10 am</option>
-            <option value="11">11 am</option>
-            <option value="12">12 pm</option>
-            <option value="13">1 pm</option>
-            <option value="14">2 pm</option>
-            <option value="15">3 pm</option> 
-            <option value="16">4 pm</option>
-            <option value="17">5 pm</option>
-            <option value="18">6 pm</option>
-            <option value="19">7 pm</option>
-            <option value="20">8 pm or later</option>
-          </select>
-
-        <AddressSearch className='start-input' clear={startAddressClear} setUserCoordinates={setStartCoordinates} setSearching={setSearching} showNotification={showNotification} address={startAddress} filterName={filterName}/>
-        <AddressSearch className='end-input' clear={endAddressClear} setUserCoordinates={setEndCoordinates} setSearching={setSearching} showNotification={showNotification} address={endAddress} filterName={filterName}/>
+        <button className={buttonsOpen ? 'hide-buttons-button' : 'hide-buttons-button hidden'} onClick={toggleButtonsOpen}><Minus size={24} /></button>
 
         <MapContainer center={[42.2626, -71.8079]} zoom={13} style={{ height: "100%", width: "100%"} } zoomControl={false}>
 
