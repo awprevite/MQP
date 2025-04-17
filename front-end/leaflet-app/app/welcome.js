@@ -2,7 +2,6 @@
 
 const Welcome = ({setWelcomeOpen}) => {
 
-
   return (
     <>
       <div className='welcome-modal-overlay' onClick={() => {setWelcomeOpen(false)}}></div>
@@ -41,6 +40,5 @@ const Welcome = ({setWelcomeOpen}) => {
     </>
   );
 }
-
 
 export default Welcome;

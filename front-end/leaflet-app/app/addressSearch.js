@@ -8,11 +8,12 @@ const AddressSearch = ({ className, clear, setUserCoordinates, setSearching, sho
   const [suggestions, setSuggestions] = useState([]);
   const [debounceTimer, setDebounceTimer] = useState(null);
 
+  // If address is updated from the map, update in the input
   useEffect(() => {
     setQuery(address);
   }, [address]);
-    // If the address prop is not empty, set the query to the address
 
+  // If address is cleared, update in the input
   useEffect(() => {
     setQuery('');
     setSuggestions([]);
@@ -43,7 +44,6 @@ const AddressSearch = ({ className, clear, setUserCoordinates, setSearching, sho
         }
       })
       .catch((error) => {
-        //console.error("Error fetching suggestions:", error);
       });
   };
 
@@ -53,15 +53,15 @@ const AddressSearch = ({ className, clear, setUserCoordinates, setSearching, sho
     setQuery(value);
 
     // Wait for atleast 3 characters to be entered, unlikely to find a match with less
-    // Also wait for 0.5 seconds after the last input change to not flood the API with requests - hope this is long enough
+    // Also wait for 1 seconds after the last input change to not flood the API with requests
     if (value.length > 2) {
-      // Clear the previous timeout if user types again before 0.5 seconds
+      // Clear the previous timeout if user types again before 1 seconds
       if (debounceTimer) {
         clearTimeout(debounceTimer);
       }
       setSearching(true);
 
-      // Set a new timeout to fetch suggestions after 0.5 seconds after the last input change
+      // Set a new timeout to fetch suggestions after 1 seconds after the last input change
       const timer = setTimeout(() => {
         fetchSuggestions(value);
         setSearching(false);
@@ -76,19 +76,18 @@ const AddressSearch = ({ className, clear, setUserCoordinates, setSearching, sho
 
   // Handle selecting an address from suggestions
   const handleSelect = (item) => {
-
-    // Only take the first two parts of the address, the whole display name is very long
-    //const parts = address.display_name.split(", ");
-    //setQuery(`${parts[0]}, ${parts[1]}`); // Set input value to selected address
-    setQuery(filterName(item)); // Set input value to selected address
-    setSuggestions([]); // Hide suggestions
-
-    // Move map to selected address
+    // Set input value to selected address
+    setQuery(filterName(item));
+     // Hide suggestions
+    setSuggestions([]);
+    // Move marker to selected address
     setUserCoordinates({ lat: parseFloat(item.lat), lng: parseFloat(item.lon) });
   };
 
   return (
     <div style={{ position: "relative" }}>
+
+      {/* Text area */}
       <input
         className={className}
         type='text'
@@ -103,14 +102,12 @@ const AddressSearch = ({ className, clear, setUserCoordinates, setSearching, sho
         <ul className={className === "start-input" ? "start-ul" : "end-ul"}>
           {suggestions.map((item) => (
             <li key={item.place_id} onClick={() => handleSelect(item)} style={{ cursor: "pointer", padding: "5px" }}>
-
-              {/* Display only the first two parts of the address to allow for multiple suggestions to show up */}
               {`${filterName(item)}`}
-              {/*{`${item.display_name.split(", ")[0]}, ${item.display_name.split(", ")[1]}`}*/}
             </li>
           ))}
         </ul>
       )}
+
     </div>
   );
 };

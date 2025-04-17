@@ -85,14 +85,15 @@ CORS(app)
 task_queue = Queue()
 result_queue = Queue()
 
+# Function to parse requests and then make the routes
 def worker(task_queue, result_queue):
+    # Poll for requests
     while True:
         task = task_queue.get()
         if task is None:
             break
 
         try:
-
             start = task['start']
             startLat = start['lat']
             startLng = start['lng']
@@ -230,16 +231,17 @@ def worker(task_queue, result_queue):
     
 @app.route('/route', methods=['POST'])
 def solve_route():
+    # Put requests in the queue
+    task = request.get_json()
+    task_queue.put(task)
 
-        task = request.get_json()
-        task_queue.put(task)
+    result = result_queue.get()
 
-        result = result_queue.get()
-
-        if "error" in result:
-            return jsonify(result), 500
-        return jsonify(result)
+    if "error" in result:
+        return jsonify(result), 500
+    return jsonify(result)
     
+# Function to make the routes
 def generateRoute(stops_feature, route_feature, route_layer, output, shapefileOutput, geojsonOutput, geojsonConvertedOutput):
 
     # Removing stops

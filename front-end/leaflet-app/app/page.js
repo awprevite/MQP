@@ -1,16 +1,16 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from "react";
-import { useMapEvents } from "react-leaflet";
-import { Navigation, Moon, Square, SquareCheck, Minus } from "lucide-react";
-import dynamic from "next/dynamic";
-import axios from "axios";
-import "leaflet/dist/leaflet.css";
-import "./globals.css"
-import AddressSearch from "./addressSearch";
-import { boundaryCoordinates, pointInPolygon } from "./boundary";
-import Loading from "./loading";
-import Welcome from "./welcome";
+import React, { useState, useRef, useEffect } from 'react';
+import { useMapEvents } from 'react-leaflet';
+import { Navigation, Moon, Square, SquareCheck, Minus } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import axios from 'axios';
+import 'leaflet/dist/leaflet.css';
+import './globals.css'
+import { boundaryCoordinates, pointInPolygon } from './boundary';
+import AddressSearch from './AddressSearch';
+import Loading from './Loading';
+import Welcome from './Welcome';
 
 // Dynamically import react-leaflet components, disabling SSR, avoid window is not defined issues
 const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), { ssr: false });
@@ -28,9 +28,7 @@ export default function Home() {
   // Notification state and logic
   const [notification, setNotification] = useState(null);
   const notificationTimeout = useRef(null);
-
   const notificationCounter = useRef(0);
-
   function showNotification(message) {
     setNotification(message + " (" + notificationCounter.current + ")");
     notificationCounter.current ++;
@@ -45,6 +43,7 @@ export default function Home() {
     }, 3000);
   }
 
+  // Clear address input states
   const [startAddressClear, setStartAddressClear] = useState(false);
   const [endAddressClear, setEndAddressClear] = useState(false);
 
@@ -58,7 +57,10 @@ export default function Home() {
   const [searching, setSearching] = useState(false);
   const [locating, setLocating] = useState(false);
 
+  // Welcome screen state
   const [welcomeOpen, setWelcomeOpen] = useState(true);
+
+  // Top menu of buttons state
   const [buttonsOpen, setButtonsOpen] = useState(true);
   const toggleButtonsOpen = () => {
     setButtonsOpen(!buttonsOpen);
@@ -79,10 +81,18 @@ export default function Home() {
 
   // Worcester boundary state, loaded on mount within use effect
   const [boundary, setBoundary ] = useState(null);
+  useEffect(() => {
+    fetch("/boundary.geojson")
+      .then((response) => {
+        return response.json();
+      })
+      .then((data) => {
+        setBoundary(data);
+      })
+  }, []);
 
-  // Dark/light mode
+  // Dark/light mode state
   const [darkMode, setDarkMode] = useState(false);
-
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
   }
@@ -103,25 +113,25 @@ export default function Home() {
 
   // GeoJSON styles, routes and boundary
   const geojsonStyle = {
-    color: "#0A84FF",
+    color: "#0A84FF",     // Blue
     weight: 4,
     opacity: 0.6,
     fillOpacity: 0.6
   };
   const directGeojsonStyle = {
-    color: "#EA4335",
+    color: "#EA4335",     // Red
     weight: 4,
     opacity: 0.8,
     fillOpacity: 0.7
   };
   const boundaryStyle = {
-    color: darkMode ? "#8d8d8d" : "#000000",
+    color: darkMode ? "#8d8d8d" : "#000000",  // Grey or black
     weight: 5,
     opacity: 1,
     fillOpacity: 1
   };
 
-  // Use the users current time and location for default
+  // Use the users current time and location upon mount
   useEffect(() => {
     let hours = new Date().getHours();
     if(hours < 6){
@@ -133,7 +143,7 @@ export default function Home() {
     hours.toString();
     setTime(hours);
 
-    //findLocation(); //uncomment for production
+    findLocation();
   }, []);
 
   // Function to find the user's location
@@ -169,9 +179,11 @@ export default function Home() {
     );
   };
 
+  // Address states
   const [startAddress, setStartAddress] = useState("");
   const [endAddress, setEndAddress] = useState("");
 
+  // Reverse geocoding to get address from coordinates
   const fetchAddress = (lat, lng) => {
     axios.get(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
       .then((response) => {
@@ -182,12 +194,13 @@ export default function Home() {
         }
       })
       .catch((error) => {
-        console.error("Error fetching address:", error);
+        showNotification("Unable to find address");
       });
-  }
+  };
 
   // ClickHandler component to handle marker placement on map tap
   const ClickHandler = () => {
+    // Button menu must be open to place markers
     if(!buttonsOpen){
       return null;
     }
@@ -210,6 +223,7 @@ export default function Home() {
             setEndAddressClear(prev => !prev);
           }
 
+          // Find address for the clicked point
           fetchAddress(lat, lng);
 
         }else{
@@ -268,23 +282,7 @@ export default function Home() {
       });
   };
 
-  // Load the Worcester boundary on mount
-  useEffect(() => {
-    fetch("/boundary.geojson")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setBoundary(data);
-      })
-      .catch((error) => {
-        //console.error("Error fetching Boundary data:", error);
-      });
-  }, []);
-
+  // Cool and direct route toggles
   const [showCool, setShowCool] = useState(true);
   const [showDirect, setShowDirect] = useState(true);
   const toggleCool = () => {
@@ -294,6 +292,7 @@ export default function Home() {
     setShowDirect(!showDirect);
   }
 
+  // Address filters
   const filterName = (item) => {
     let address = "";
     if(item.address.leisure){
@@ -324,6 +323,7 @@ export default function Home() {
   return (
     <>
       {welcomeOpen && <Welcome setWelcomeOpen={setWelcomeOpen} />}
+
       <div className='map-container'>
         {buttonsOpen &&
           <>
@@ -355,10 +355,11 @@ export default function Home() {
             </select>
           </>
         }
+
+        <button className={buttonsOpen ? 'hide-buttons-button' : 'hide-buttons-button hidden'} onClick={toggleButtonsOpen}><Minus size={80} /></button>
         
         <button className='show-cool-checkbox' onClick={toggleCool}>{showCool ? <SquareCheck size={18} /> : <Square size={18} />}</button>
         <button className='show-direct-checkbox' onClick={toggleDirect}>{showDirect ? <SquareCheck size={18} /> : <Square size={18} />}</button>
-        <button className={buttonsOpen ? 'hide-buttons-button' : 'hide-buttons-button hidden'} onClick={toggleButtonsOpen}><Minus size={80} /></button>
 
         <MapContainer center={[42.2626, -71.8079]} zoom={13} style={{ height: "100%", width: "100%"} } zoomControl={false}>
 
@@ -381,9 +382,11 @@ export default function Home() {
             ""
             } 
           />}
+
         <label className='direct-info'>{directShapeLength.current} Miles<br />{directTime.current} Minutes</label>
         <label className='cool-info'>{coolShapeLength.current} Miles<br />{coolTime.current} Minutes</label>
       </div>
+
       {loading && <div className='loader'></div>}
       {searching && <div className='searcher'></div>}
       {locating && <div className='locator'></div>}

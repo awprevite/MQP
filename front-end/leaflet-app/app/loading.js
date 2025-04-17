@@ -12,6 +12,7 @@ const Loading = ({ text }) => {
     'Almost there...'
   ];
 
+  // Go through loading phrases or use default for loading type
   useEffect(() => {
     let i = 0;
     let interval;
