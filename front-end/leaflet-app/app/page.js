@@ -8,9 +8,9 @@ import axios from 'axios';
 import 'leaflet/dist/leaflet.css';
 import './globals.css'
 import { boundaryCoordinates, pointInPolygon } from './boundary';
-import AddressSearch from './AddressSearch';
-import Loading from './Loading';
-import Welcome from './Welcome';
+import AddressSearch from './addressSearch';
+import Loading from './loading';
+import Welcome from './welcome';
 
 // Dynamically import react-leaflet components, disabling SSR, avoid window is not defined issues
 const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), { ssr: false });
