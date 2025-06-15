@@ -4,7 +4,7 @@ This is a Major Qualifying Project (MQP) For WPI.
 The purpose is to provide cool, thermally comfortable walking paths that prioritize shade and low temperatures, and direct routes between two user provided points at a given time.  
 
 Access the app [here](https://cool-routes.vercel.app).  
-Access a full report and visual for this project [here](https://digital.wpi.edu/concern/student_works/8k71nn47d)
+Access a full report and visual for this project [here](https://digital.wpi.edu/concern/student_works/8k71nn47d).
 
 ## Tech Stack
 The app uses Javascript, React and Next.js for the front-end and Python, Arcpy, and Flask for the back-end.  
